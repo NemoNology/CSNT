@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Linq;
 
 namespace CSNT_Lab_4
 {
@@ -15,7 +9,7 @@ namespace CSNT_Lab_4
         public _mainWindow()
         {
             InitializeComponent();
-            _inputIP.Mask = "099/099/099/099";
+            _CB_Div.Checked = false;
         }
 
         private void maskedTextBox1_TextChanged(object sender, EventArgs e)
@@ -30,63 +24,92 @@ namespace CSNT_Lab_4
         {
             _L_IP.Text = _inputIP.Text.Replace(" ", "");
 
-            string _mask1 = _L_IP.Text.Substring(0, _inputIP.Text.IndexOf('.', 0));
-            string _mask3 = _L_IP.Text.Substring(0, _inputIP.Text.LastIndexOf('.'));
-            string _mask2 = _mask3.Substring(0, _mask3.LastIndexOf('.'));
+            int bitSize = Convert.ToInt32(_inputBitSize.Text);
 
-            int temp = Convert.ToInt32(_mask1);
-
-            switch (Convert.ToString(temp, 2).Substring(0, 3))
+            if (bitSize > 32)
             {
-                // todo: cases: "000 - 111"
-                // 1 - 126: case 1
-                // 128 - 191: case 2
-                // 192 - 223: case 3
-
-                case "011":
-
-                    _L_Mask.Text = "255.0.0.0";
-                    _L_Broadcast.Text = _mask1 + ".255.255.255";
-                    _L_NetworkAddress.Text = _mask1 + ".0.0.0";
-                    break;
-
-                case "010":
-
-                    _L_Mask.Text = "255.255.0.0";
-                    _L_Broadcast.Text = _mask2 + ".255.255";
-                    _L_NetworkAddress.Text = _mask2 + ".0.0";
-                    break;
-
-                case "110":
-
-                    _L_Mask.Text = "255.255.255.0";
-                    _L_Broadcast.Text = _mask3 + ".255";
-                    _L_NetworkAddress.Text = _mask3 + ".0";
-                    break;
-
-                default:
-
-                    _L_Mask.Text = "Маску не вычислен";
-                    _L_Broadcast.Text = "Широковещательный домен не вычислен";
-                    _L_NetworkAddress.Text = "Адрес сети не вычислен";
-                    break;
-
+                _L_Mask.Text = "Маска не может быть больше 32!";
+                _L_Broadcast.Text = "Маска не может быть больше 32!";
+                _L_NetworkAddress.Text = "Маска не может быть больше 32!";
+                _L_IP.Text = "Маска не может быть больше 32!";
+                _L_NodeAmount.Text = "Маска не может быть больше 32!";
+                return;
             }
 
-            _L_NodeAmount.Text = Math.Pow(2, 32 - Convert.ToInt32(_TB_bitSize.Text)).ToString();
+            _L_NodeAmount.Text = (Math.Pow(2, 32 - bitSize) - 2).ToString() + " + 2 (Адрес сети и Broadcast)";
+
+            string[] masks = { ".0.0.0", ".0.0", ".0" , "" };
+            string[] masks2 = { "", "255.", "255.255.", "255.255.255." };
+            string[] masks3 = { "0", "128", "192", "224", "240", "248", "252", "254", "255" };
+
+                
+            _L_Mask.Text = masks2[bitSize / 8] + masks3[bitSize - ((bitSize / 8) * 8)] + masks[bitSize / 8];
+
+
+			if (_CB_Div.Checked)
+			{
+				
+				// todo: Network div
+
+				string[] nodes = _TB_Div.Text.Split(' ');
+                int[] nodesInt = new int[nodes.Length];
+
+                for (int i = 0; i < nodes.Length; i++)
+                {
+                    nodesInt[i] = Convert.ToInt32(nodes[i]);
+                }
+
+                if (nodesInt.Sum() + 2 * nodes.Length > Convert.ToInt64(_L_NodeAmount.Text))
+                {
+
+                }
+
+                Array.Sort(nodes);
+                Array.Reverse(nodes);
+				string lastIP = _L_IP.Text;
+			}
+
+
+
+            masks = _L_IP.Text.Split('.');
+            masks2 = _L_Mask.Text.Split('.');
+
+
+            for (int i = 0; i < 3; i++)
+            {
+                masks3[i] = Convert.ToString(~Convert.ToByte(masks2[i + 1]), 2).Substring(24);
+            }
+
+
+            _L_NetworkAddress.Text = (Convert.ToInt32(masks[0]) & Convert.ToInt32(masks2[0])) + "."
+                + (Convert.ToInt32(masks[1]) & Convert.ToInt32(masks2[1])) + "."
+                + (Convert.ToInt32(masks[2]) & Convert.ToInt32(masks2[2])) + "."
+                + (Convert.ToInt32(masks[3]) & Convert.ToInt32(masks2[3]));
+
+            _L_Broadcast.Text = (Convert.ToInt32(masks[0]) & Convert.ToInt32(masks2[0])) + "."
+                + (Convert.ToInt32(masks[1]) | Convert.ToByte(masks3[0], 2)) + "."
+                + (Convert.ToInt32(masks[2]) | Convert.ToByte(masks3[1], 2)) + "."
+                + (Convert.ToInt32(masks[3]) | Convert.ToByte(masks3[2], 2));
 
 
         }
 
-        private void _TB_bitSize_TextChanged(object sender, EventArgs e)
+        private void _inputBitSize_TextChanged(object sender, EventArgs e)
         {
-            if (_TB_bitSize.Text.EndsWith("*"))
+            if (_inputBitSize.Text.EndsWith("99"))
             {
                 _inputIP.Text = "192.168.11 .8  ";
 
-                _TB_bitSize.Text = "24";
+                _inputBitSize.Text = "24";
             }
+        }
 
+        private void _CB_Div_CheckedChanged(object sender, EventArgs e)
+        {
+            _TB_Div.Enabled = !_TB_Div.Enabled;
+            _TB_Div.Visible = !_TB_Div.Visible;
+            _DGV_Nodes.Enabled = !_DGV_Nodes.Enabled;
+            _DGV_Nodes.Visible = !_DGV_Nodes.Visible;
         }
     }
 }
