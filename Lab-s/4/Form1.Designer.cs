@@ -46,6 +46,8 @@
             this._DGV_Nodes = new System.Windows.Forms.DataGridView();
             this._CB_Div = new System.Windows.Forms.CheckBox();
             this._TB_Div = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this._L_Info = new System.Windows.Forms.Label();
             this.Number = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.HostsNeeds = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.HostsAll = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -175,6 +177,8 @@
             this._inputIP.TabIndex = 14;
             this._inputIP.Text = "19216811 8";
             this._inputIP.TextChanged += new System.EventHandler(this.maskedTextBox1_TextChanged);
+            this._inputIP.Enter += new System.EventHandler(this._inputIP_Enter);
+            this._inputIP.Leave += new System.EventHandler(this._inputIP_Leave);
             // 
             // _inputBitSize
             // 
@@ -209,92 +213,106 @@
             this.NetworkAddress,
             this.Broadcast,
             this.Range});
-            this._DGV_Nodes.Enabled = false;
             this._DGV_Nodes.Location = new System.Drawing.Point(12, 293);
             this._DGV_Nodes.Name = "_DGV_Nodes";
             this._DGV_Nodes.ReadOnly = true;
-            this._DGV_Nodes.Size = new System.Drawing.Size(694, 256);
+            this._DGV_Nodes.Size = new System.Drawing.Size(694, 235);
             this._DGV_Nodes.TabIndex = 19;
-            this._DGV_Nodes.Visible = false;
-            // 
-            // _CB_Div
-            // 
-            this._CB_Div.AutoSize = true;
-            this._CB_Div.Location = new System.Drawing.Point(154, 237);
-            this._CB_Div.Name = "_CB_Div";
-            this._CB_Div.Size = new System.Drawing.Size(76, 17);
-            this._CB_Div.TabIndex = 20;
-            this._CB_Div.Text = "Включено";
-            this._CB_Div.UseVisualStyleBackColor = true;
-            this._CB_Div.CheckedChanged += new System.EventHandler(this._CB_Div_CheckedChanged);
             // 
             // _TB_Div
             // 
             this._TB_Div.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this._TB_Div.Enabled = false;
             this._TB_Div.Location = new System.Drawing.Point(12, 261);
             this._TB_Div.Name = "_TB_Div";
             this._TB_Div.Size = new System.Drawing.Size(694, 20);
             this._TB_Div.TabIndex = 21;
-            this._TB_Div.Visible = false;
+            this._TB_Div.Enter += new System.EventHandler(this._TB_Div_Enter);
+            this._TB_Div.Leave += new System.EventHandler(this._TB_Div_Leave);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(261, 172);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(163, 13);
+            this.label1.TabIndex = 6;
+            this.label1.Text = "Дополнительная информация:";
+            // 
+            // _L_Info
+            // 
+            this._L_Info.AutoSize = true;
+            this._L_Info.Location = new System.Drawing.Point(424, 172);
+            this._L_Info.Name = "_L_Info";
+            this._L_Info.Size = new System.Drawing.Size(16, 13);
+            this._L_Info.TabIndex = 6;
+            this._L_Info.Text = "...";
             // 
             // Number
             // 
-            this.Number.FillWeight = 60F;
-            this.Number.HeaderText = "Номер сети";
+            this.Number.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.AllCells;
+            this.Number.FillWeight = 50F;
+            this.Number.HeaderText = "№ сети";
             this.Number.Name = "Number";
             this.Number.ReadOnly = true;
-            this.Number.Width = 60;
+            this.Number.Width = 69;
             // 
             // HostsNeeds
             // 
+            this.HostsNeeds.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
             this.HostsNeeds.FillWeight = 60F;
             this.HostsNeeds.HeaderText = "Нужно хостов";
             this.HostsNeeds.Name = "HostsNeeds";
             this.HostsNeeds.ReadOnly = true;
-            this.HostsNeeds.Width = 60;
+            this.HostsNeeds.Width = 102;
             // 
             // HostsAll
             // 
+            this.HostsAll.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
             this.HostsAll.FillWeight = 60F;
             this.HostsAll.HeaderText = "Всего хостов";
             this.HostsAll.Name = "HostsAll";
             this.HostsAll.ReadOnly = true;
-            this.HostsAll.Width = 60;
+            this.HostsAll.Width = 99;
             // 
             // Mask
             // 
+            this.Mask.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
             this.Mask.HeaderText = "Маска";
             this.Mask.Name = "Mask";
             this.Mask.ReadOnly = true;
+            this.Mask.Width = 65;
             // 
             // NetworkAddress
             // 
+            this.NetworkAddress.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
             this.NetworkAddress.HeaderText = "Адрес сети";
             this.NetworkAddress.Name = "NetworkAddress";
             this.NetworkAddress.ReadOnly = true;
+            this.NetworkAddress.Width = 89;
             // 
             // Broadcast
             // 
+            this.Broadcast.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
             this.Broadcast.HeaderText = "Широковещание";
             this.Broadcast.Name = "Broadcast";
             this.Broadcast.ReadOnly = true;
+            this.Broadcast.Width = 116;
             // 
             // Range
             // 
+            this.Range.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.Range.FillWeight = 300F;
             this.Range.HeaderText = "Пласт адресов";
             this.Range.MinimumWidth = 200;
             this.Range.Name = "Range";
             this.Range.ReadOnly = true;
-            this.Range.Width = 300;
             // 
             // _mainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(718, 561);
+            this.ClientSize = new System.Drawing.Size(718, 540);
             this.Controls.Add(this._TB_Div);
             this.Controls.Add(this._CB_Div);
             this.Controls.Add(this._DGV_Nodes);
@@ -308,6 +326,8 @@
             this.Controls.Add(this._L_IP);
             this.Controls.Add(this._L6);
             this.Controls.Add(this._L5);
+            this.Controls.Add(this._L_Info);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this._L4);
             this.Controls.Add(this._L3);
             this.Controls.Add(this._L1);
@@ -341,6 +361,8 @@
         private System.Windows.Forms.DataGridView _DGV_Nodes;
         private System.Windows.Forms.CheckBox _CB_Div;
         private System.Windows.Forms.TextBox _TB_Div;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label _L_Info;
         private System.Windows.Forms.DataGridViewTextBoxColumn Number;
         private System.Windows.Forms.DataGridViewTextBoxColumn HostsNeeds;
         private System.Windows.Forms.DataGridViewTextBoxColumn HostsAll;

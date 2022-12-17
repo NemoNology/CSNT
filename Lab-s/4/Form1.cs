@@ -2,6 +2,8 @@
 using System.Windows.Forms;
 using System.Linq;
 
+using BW = CSNT_Lab_4.BinaryWord;
+
 namespace CSNT_Lab_4
 {
     public partial class _mainWindow : Form
@@ -22,75 +24,84 @@ namespace CSNT_Lab_4
 
         private void _B_Input_Click(object sender, EventArgs e)
         {
-            _L_IP.Text = _inputIP.Text.Replace(" ", "");
+            _L_Info.Text = _L_Mask.Text = _L_Broadcast.Text = _L_NetworkAddress.Text = _L_IP.Text = _L_NodeAmount.Text = "...";
 
-            int bitSize = Convert.ToInt32(_inputBitSize.Text);
+            if (IP.SetIP(_inputIP.Text) == -1)
+            { 
+                _L_Info.Text = "Был введён некорекктный IP адрес!";
 
-            if (bitSize > 32)
-            {
-                _L_Mask.Text = "Маска не может быть больше 32!";
-                _L_Broadcast.Text = "Маска не может быть больше 32!";
-                _L_NetworkAddress.Text = "Маска не может быть больше 32!";
-                _L_IP.Text = "Маска не может быть больше 32!";
-                _L_NodeAmount.Text = "Маска не может быть больше 32!";
                 return;
             }
 
-            _L_NodeAmount.Text = (Math.Pow(2, 32 - bitSize) - 2).ToString() + " + 2 (Адрес сети и Broadcast)";
+            int bitSize = Convert.ToInt32(_inputBitSize.Text);
 
-            string[] masks = { ".0.0.0", ".0.0", ".0" , "" };
-            string[] masks2 = { "", "255.", "255.255.", "255.255.255." };
-            string[] masks3 = { "0", "128", "192", "224", "240", "248", "252", "254", "255" };
+            if (bitSize > 30 || bitSize == 0)
+            {
+                _L_Info.Text = "Не делайте маску больше 30 или нулевой!";
 
-                
-            _L_Mask.Text = masks2[bitSize / 8] + masks3[bitSize - ((bitSize / 8) * 8)] + masks[bitSize / 8];
+                return;
+            }
+
+            IP.SetMask(bitSize);
+
+            _L_Mask.Text = IP.GetMask();
+            _L_Broadcast.Text = IP.GetBroadcast();
+            _L_NetworkAddress.Text = IP.GetNetworkAddress();
+            _L_IP.Text = IP.GetIP();
+            _L_NodeAmount.Text = IP.GetNodesAmountString();
 
 
-			if (_CB_Div.Checked)
+
+			if (_TB_Div.Text != string.Empty)
 			{
 				
-				// todo: Network div
-
 				string[] nodes = _TB_Div.Text.Split(' ');
                 int[] nodesInt = new int[nodes.Length];
+                _DGV_Nodes.Rows.Clear();
 
                 for (int i = 0; i < nodes.Length; i++)
                 {
-                    nodesInt[i] = Convert.ToInt32(nodes[i]);
+                    try
+                    {
+                        nodesInt[i] = Convert.ToInt32(nodes[i]);
+                    }
+                    catch
+                    {
+                        _L_Info.Text = "Неверно указаны размеры подсетей!";
+                        return;
+                    }
                 }
 
-                if (nodesInt.Sum() + 2 * nodes.Length > Convert.ToInt64(_L_NodeAmount.Text))
+                uint sum = uint.MinValue;
+
+                foreach (int node in nodesInt)
                 {
+                    sum += (uint)Math.Pow(2, Math.Ceiling(Math.Log(node + 2, 2))) - 2;
+                }
+
+                if (IP.GetNodesAmount() < nodesInt.Sum() || IP.GetNodesAmount() < sum)
+                {
+                    _L_Info.Text = "Количество нужных подсетей превышает возможное количество подсетей в сети" +
+                        "\nили сеть невозможно разделить на требуемое количество подсетей!";
+                    return;
+                }
+
+                Array.Sort(nodesInt);
+                Array.Reverse(nodesInt);
+                bitSize = 1;
+
+                foreach (int ns in nodesInt)
+                {
+                    IP.SetIP(IP.GetNetworkAddress());
+                    IP.SetMask(32 - (int)Math.Ceiling(Math.Log(ns + 2, 2)));
+                    _DGV_Nodes.Rows.Add(bitSize, ns, IP.GetNodesAmount(), IP.GetMask() + " \\ " + IP._bitSize, IP.GetNetworkAddress(),
+                        IP.GetBroadcast(), IP.GetFirstAddress() + " - " + IP.GetLastAddress());
+                    IP.SetIP(BW.BinaryWordToByte(BW.IncBinaryWord(BW.GetBinaryWord(IP.GetNetworkAddress(), '.'), (uint)Math.Pow(2, 32 - IP._bitSize)), '.'));
+                    bitSize++;
 
                 }
 
-                Array.Sort(nodes);
-                Array.Reverse(nodes);
-				string lastIP = _L_IP.Text;
-			}
-
-
-
-            masks = _L_IP.Text.Split('.');
-            masks2 = _L_Mask.Text.Split('.');
-
-
-            for (int i = 0; i < 3; i++)
-            {
-                masks3[i] = Convert.ToString(~Convert.ToByte(masks2[i + 1]), 2).Substring(24);
             }
-
-
-            _L_NetworkAddress.Text = (Convert.ToInt32(masks[0]) & Convert.ToInt32(masks2[0])) + "."
-                + (Convert.ToInt32(masks[1]) & Convert.ToInt32(masks2[1])) + "."
-                + (Convert.ToInt32(masks[2]) & Convert.ToInt32(masks2[2])) + "."
-                + (Convert.ToInt32(masks[3]) & Convert.ToInt32(masks2[3]));
-
-            _L_Broadcast.Text = (Convert.ToInt32(masks[0]) & Convert.ToInt32(masks2[0])) + "."
-                + (Convert.ToInt32(masks[1]) | Convert.ToByte(masks3[0], 2)) + "."
-                + (Convert.ToInt32(masks[2]) | Convert.ToByte(masks3[1], 2)) + "."
-                + (Convert.ToInt32(masks[3]) | Convert.ToByte(masks3[2], 2));
-
 
         }
 
@@ -101,15 +112,30 @@ namespace CSNT_Lab_4
                 _inputIP.Text = "192.168.11 .8  ";
 
                 _inputBitSize.Text = "24";
+
+                _TB_Div.Text = "60 10 10 10";
             }
         }
 
-        private void _CB_Div_CheckedChanged(object sender, EventArgs e)
+        private void _TB_Div_Enter(object sender, EventArgs e)
         {
-            _TB_Div.Enabled = !_TB_Div.Enabled;
-            _TB_Div.Visible = !_TB_Div.Visible;
-            _DGV_Nodes.Enabled = !_DGV_Nodes.Enabled;
-            _DGV_Nodes.Visible = !_DGV_Nodes.Visible;
+            _L_Info.Text = "Вводите размеры подсетей через пробел \nПример:\t128 30 29 11";
         }
+
+        private void _TB_Div_Leave(object sender, EventArgs e)
+        {
+            _L_Info.Text = "...";
+        }
+
+        private void _inputIP_Enter(object sender, EventArgs e)
+        {
+            _L_Info.Text = "Чтобы получить страртовый набор \nвведите значение 99 в маску";
+        }
+
+        private void _inputIP_Leave(object sender, EventArgs e)
+        {
+            _L_Info.Text = "...";
+        }
+        
     }
 }
