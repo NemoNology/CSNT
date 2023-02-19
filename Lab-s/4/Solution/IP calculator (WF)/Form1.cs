@@ -11,6 +11,8 @@ namespace IP_calculator__WF_
             InitializeComponent();
         }
 
+        Network network = new Network();
+
         /// <summary>
         /// Calculate available information by IP and Mask 
         /// <br/> And Cut Network to SubNetworks, if possible
@@ -27,8 +29,8 @@ namespace IP_calculator__WF_
 
             try
             {
-                Network.IPString = inputIP.Text.Replace(" ", "");
-                Network.BitMask = (int)inputMask.Value;
+                network.IPString = inputIP.Text.Replace(" ", "");
+                network.BitMask = (int)inputMask.Value;
             }
             catch (Exception exc)
             {
@@ -36,16 +38,16 @@ namespace IP_calculator__WF_
                 return;
             }
 
-            outputIP.Text = Network.IPString;
-            outputMask.Text = Network.BitMask.ToString();
-            outputNetworkClass.Text = Network.NetworkClass;
-            outputNetworkAddress.Text = Network.Address;
-            outputBroadcast.Text = Network.Broadcast;
-            outputNetworkMask.Text = Network.NetworkMaskString;
-            outputWildMask.Text = Network.WildMaskString;
-            outputHostsAmount.Text = Network.HostsAmount.ToString() + " + 2 (Broadcast and Network Address)";
-            outputFirstAddress.Text = Network.FirstAddress;
-            outputLastAddress.Text = Network.LastAddress;
+            outputIP.Text = network.IPString;
+            outputMask.Text = network.BitMask.ToString();
+            outputNetworkClass.Text = network.NetworkClass;
+            outputNetworkAddress.Text = network.Address;
+            outputBroadcast.Text = network.Broadcast;
+            outputNetworkMask.Text = network.NetworkMaskString;
+            outputWildMask.Text = network.WildMaskString;
+            outputHostsAmount.Text = network.HostsAmount.ToString() + " + 2 (Broadcast and Network Address)";
+            outputFirstAddress.Text = network.FirstAddress;
+            outputLastAddress.Text = network.LastAddress;
 
 
             if (inputSubnetworks.Text.Length != 0)
@@ -75,7 +77,7 @@ namespace IP_calculator__WF_
                     sum += (uint)Math.Pow(2, Math.Ceiling(Math.Log(item, 2)));
                 }
 
-                if (sum > Network.HostsAmount)
+                if (sum > network.HostsAmount)
                 {
                     status.Text = "Needed hosts amount more that there is in given Network";
                     return;
@@ -86,35 +88,35 @@ namespace IP_calculator__WF_
 
                 outputSubnetworks.Rows.Clear();
 
-                Network.IPString = Network.Address;
+                network.IPString = network.Address;
 
                 foreach (var item in numbers)
                 {
-                    int bitMask = Network.BitMask;
+                    int bitMask = network.BitMask;
 
-                    while (item < (uint)(Math.Pow(2, Network.DigitsAmountInIP - bitMask) - 2))
+                    while (item < (uint)(Math.Pow(2, network.DigitsAmountInIP - bitMask) - 2))
                     {
                         bitMask++;
                     }
 
                     bitMask--;
 
-                    Network.BitMask = bitMask;
+                    network.BitMask = bitMask;
 
                     outputSubnetworks.Rows.Add(
-                        Network.IPString,
-                        Network.NetworkMaskString + " / " + bitMask.ToString(),
+                        network.IPString,
+                        network.NetworkMaskString + " / " + bitMask.ToString(),
                         item,
-                        Network.HostsAmount,
-                        Network.HostsAmount - item,
-                        Network.FirstAddress + " - " + Network.LastAddress,
-                        Network.Address,
-                        Network.Broadcast
+                        network.HostsAmount,
+                        network.HostsAmount - item,
+                        network.FirstAddress + " - " + network.LastAddress,
+                        network.Address,
+                        network.Broadcast
                         );
 
-                    Network.IPString = Network.Broadcast;
+                    network.IPString = network.Broadcast;
 
-                    Network.IPInt += 1;
+                    network.IPInt += 1;
                 }
             }
         }
@@ -148,11 +150,11 @@ namespace IP_calculator__WF_
         {
             Random rnd = new Random(DateTime.Now.Millisecond);
 
-            Network.IPInt = rnd.Next(int.MinValue, int.MaxValue);
-            Network.BitMask = rnd.Next(0, 32);
+            network.IPInt = rnd.Next(int.MinValue, int.MaxValue);
+            network.BitMask = rnd.Next(0, 32);
 
-            inputIP.Text = Network.IPStringWithSpaces;
-            inputMask.Value = Network.BitMask;
+            inputIP.Text = network.IPStringWithSpaces;
+            inputMask.Value = network.BitMask;
 
             ButtonInput_Click(sender, e);
         }

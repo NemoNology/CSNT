@@ -6,15 +6,15 @@ namespace IP_calculator__WF_
     {
         #region Fields & Properties
 
-        private static bool _isIPv6 = false;
-        private static byte[] _ip = new byte[4];
-        private static byte[] _mask = new byte[4];
-        public static readonly int OktetSize = 8;
+        private bool _isIPv6 = false;
+        private byte[] _ip = new byte[4];
+        private byte[] _mask = new byte[4];
+        public readonly int OktetSize = 8;
 
         /// <summary>
         /// Return true if it's IPv6, false - IPv4
         /// </summary>
-        public static bool VersionOfIP
+        public bool VersionOfIP
         {
             get { return _isIPv6; }
             set { _isIPv6 = value; }
@@ -23,12 +23,12 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Return digits amount in IP (32 for IPv4, 48 - IPv6)
         /// </summary>
-        public static int DigitsAmountInIP => OktetSize * (_isIPv6 ? 6 : 4);
+        public int DigitsAmountInIP => OktetSize * (_isIPv6 ? 6 : 4);
 
         /// <summary>
         /// IP Address
         /// </summary>
-        public static byte[] IP
+        public byte[] IP
         {
             get
             {
@@ -54,7 +54,7 @@ namespace IP_calculator__WF_
         /// IP Address as string <br/>
         /// <example>  <b> Examples: </b> <br/> <i> 192.168.11.1 <br/> 0.0.12.0 </i>  </example>
         /// </summary>
-        public static string IPString
+        public string IPString
         {
             get
             {
@@ -99,7 +99,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Network Mask
         /// </summary>
-        public static byte[] NetworkMask
+        public byte[] NetworkMask
         {
             get { return _mask; }
 
@@ -133,7 +133,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Network Mask as string
         /// </summary>
-        public static string NetworkMaskString
+        public string NetworkMaskString
         {
             get
             {
@@ -178,7 +178,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Bit Mask - Network mask prefix
         /// </summary>
-        public static int BitMask
+        public int BitMask
         {
             get
             {
@@ -212,7 +212,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Return Wild Mask
         /// </summary>
-        public static byte[] WildMask
+        public byte[] WildMask
         {
             get
             {
@@ -257,7 +257,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Return Wild Mask as string
         /// </summary>
-        public static string WildMaskString
+        public string WildMaskString
         {
             get
             {
@@ -280,7 +280,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Return Network Class
         /// </summary>
-        public static string NetworkClass 
+        public string NetworkClass 
         { 
             get
             {
@@ -317,7 +317,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Return Broadcast Address as string
         /// </summary>
-        public static string Broadcast 
+        public string Broadcast 
         { 
             get
             {
@@ -340,7 +340,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Return Network Address as string
         /// </summary>
-        public static string Address
+        public string Address
         {
             get
             {
@@ -358,12 +358,12 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Return available Hosts Amount
         /// </summary>
-        public static uint HostsAmount => (uint)(Math.Pow(2, DigitsAmountInIP - BitMask) - 2);
+        public uint HostsAmount => (uint)(Math.Pow(2, DigitsAmountInIP - BitMask) - 2);
 
         /// <summary>
         /// Return First Network Address as string
         /// </summary>
-        public static string FirstAddress
+        public string FirstAddress
         {
             get
             {
@@ -384,7 +384,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// Return Last Network Address as string
         /// </summary>
-        public static string LastAddress
+        public string LastAddress
         {
             get
             {
@@ -407,7 +407,7 @@ namespace IP_calculator__WF_
         /// Return IP as int (if IP Version is 4) <br/>
         /// Otherside - 0;
         /// </summary>
-        public static int IPInt
+        public int IPInt
         {
             get
             {
@@ -440,7 +440,7 @@ namespace IP_calculator__WF_
         /// <summary>
         /// IP Address as string with spaces
         /// </summary>
-        public static string IPStringWithSpaces
+        public string IPStringWithSpaces
         {
             get
             {
