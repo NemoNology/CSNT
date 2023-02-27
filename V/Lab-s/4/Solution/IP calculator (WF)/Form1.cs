@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Windows.Forms;
 
 namespace IP_calculator__WF_
@@ -65,6 +64,7 @@ namespace IP_calculator__WF_
                 catch
                 {
                     status.Text = "Incorrect value in SubNetworks field";
+                    outputSubnetworks.Rows.Clear();
                     return;
                 }
 
