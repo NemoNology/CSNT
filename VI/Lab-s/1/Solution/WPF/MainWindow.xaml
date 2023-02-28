@@ -5,8 +5,57 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPF"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Sniffer (LACP)" 
+        Height="450" Width="800"
+        WindowStartupLocation="CenterScreen"
+        >
+    
+    <Grid Background="#454545">
+        
+        <Grid.RowDefinitions>
+            
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="8*"/>
+            <RowDefinition Height="1*"/>
+            
+        </Grid.RowDefinitions>
+        
+        <Menu
+            Grid.Row="0"
+            VerticalAlignment="Top"
+            Background="DimGray"
+            >
+            
+            <MenuItem 
+                Header="Program" 
+                Foreground="White"
+                FontWeight="Medium"
+                >
+                
+                
+            </MenuItem>
+            
+        </Menu>
 
+        <StatusBar 
+            Grid.Row="3"
+            VerticalAlignment="Bottom"
+            Background="DimGray"
+            VerticalContentAlignment="Top"
+            >
+            
+            <StatusBarItem>
+                
+                <TextBlock 
+                    Text="Test"
+                    Foreground="White"
+                    />
+                
+            </StatusBarItem>
+            
+        </StatusBar>
+        
     </Grid>
+    
 </Window>
