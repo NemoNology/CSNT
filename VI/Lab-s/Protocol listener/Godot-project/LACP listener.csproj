@@ -4,4 +4,7 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>LACPlistener</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Pcap.Net.x64" Version="1.0.4.1" />
+  </ItemGroup>
 </Project>
