@@ -1,9 +1,9 @@
 [gd_scene load_steps=5 format=3 uid="uid://bpkhsksa7jpek"]
 
-[ext_resource type="Script" path="res://StartButtonScript.cs" id="1_ax0ns"]
-[ext_resource type="Script" path="res://MainScript.cs" id="1_ttryv"]
-[ext_resource type="Script" path="res://StotButtonScript.cs" id="2_noaxq"]
-[ext_resource type="Script" path="res://PacketsViewScript.cs" id="3_eoryc"]
+[ext_resource type="Script" path="res://Scripts/StartButtonScript.cs" id="1_ax0ns"]
+[ext_resource type="Script" path="res://Scripts/MainScript.cs" id="1_ttryv"]
+[ext_resource type="Script" path="res://Scripts/StotButtonScript.cs" id="2_noaxq"]
+[ext_resource type="Script" path="res://Scripts/PacketsViewScript.cs" id="3_eoryc"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -73,3 +73,9 @@ size_flags_vertical = 3
 
 [node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer/ScrollContainer2"]
 layout_mode = 2
+
+[connection signal="OnPacketGet" from="." to="MarginContainer/VBoxContainer/ScrollContainer/PacketsView" method="OnPacketGet"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start" to="." method="OnStartPressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start" to="MarginContainer/VBoxContainer/HBoxContainer/Stop" method="_on_start_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Stop" to="." method="OnStopPressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Stop" to="MarginContainer/VBoxContainer/HBoxContainer/Start" method="_on_stop_pressed"]
