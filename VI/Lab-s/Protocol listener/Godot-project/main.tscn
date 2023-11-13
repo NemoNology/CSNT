@@ -76,6 +76,8 @@ layout_mode = 2
 
 [connection signal="OnPacketGet" from="." to="MarginContainer/VBoxContainer/ScrollContainer/PacketsView" method="OnPacketGet"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start" to="." method="OnStartPressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start" to="MarginContainer/VBoxContainer/HBoxContainer/Stop" method="_on_start_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start" to="MarginContainer/VBoxContainer/HBoxContainer/Start" method="OnPressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start" to="MarginContainer/VBoxContainer/HBoxContainer/Stop" method="OnStartPressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Stop" to="." method="OnStopPressed"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Stop" to="MarginContainer/VBoxContainer/HBoxContainer/Start" method="_on_stop_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Stop" to="MarginContainer/VBoxContainer/HBoxContainer/Start" method="OnStopPressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Stop" to="MarginContainer/VBoxContainer/HBoxContainer/Stop" method="OnPressed"]
