@@ -1,0 +1,184 @@
+﻿<Window x:Class="WPF_project.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WPF_project"
+        mc:Ignorable="d"
+        x:Name="ViewModel"
+        Title="Me-me chat"
+        MinHeight="450"
+        MinWidth="600">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <SolidColorBrush x:Key="Dark"
+                             Color="#86A789" />
+            <SolidColorBrush x:Key="Dark2"
+                             Color="#B2C8BA" />
+            <SolidColorBrush x:Key="Light"
+                             Color="#D2E3C8" />
+            <SolidColorBrush x:Key="Light2"
+                             Color="#EBF3E8" />
+            <Path x:Key="SendMessageIcon"
+                  Stretch="Uniform"
+                  Data="M50.25, 133.5 L49.75, 158.25 76, 147.25 z"
+                  Fill="{StaticResource Light2}"
+                  Stroke="{StaticResource Light2}"
+                  IsHitTestVisible="False" />
+            <Style x:Key="ComboBoxMain"
+                   TargetType="ComboBox">
+                <Setter Property="Background"
+                        Value="{StaticResource Light2}" />
+            </Style>
+            <Style x:Key="ButtonMain"
+                   TargetType="Button">
+                <Setter Property="Background"
+                        Value="{StaticResource Light2}" />
+                <Setter Property="FontWeight"
+                        Value="Medium" />
+                <Setter Property="Padding"
+                        Value="10 5" />
+            </Style>
+            <Style x:Key="TextBoxMain"
+                   TargetType="TextBox">
+                <Setter Property="Background"
+                        Value="{StaticResource Light2}" />
+                <Setter Property="VerticalAlignment"
+                        Value="Center" />
+                <Setter Property="MinWidth"
+                        Value="60" />
+            </Style>
+            <Style x:Key="DisabledByClientRunning"
+                   TargetType="FrameworkElement">
+                <Setter Property="IsEnabled"
+                        Value="{Binding ElementName=ViewModel, Path=IsClientNotConnected}" />
+            </Style>
+            <Style x:Key="EnabledByClientRunning"
+                   TargetType="FrameworkElement">
+                <Setter Property="IsEnabled"
+                        Value="{Binding ElementName=ViewModel, Path=IsClientConnected}" />
+            </Style>
+            <Style x:Key="EnabledByInputStartParams"
+                   TargetType="FrameworkElement">
+                <Setter Property="IsEnabled"
+                        Value="{Binding ElementName=ViewModel, Path=IsInputStartClientParametersCorrect}" />
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <TabControl>
+            <TabItem Header="Client">
+                <Grid Background="{StaticResource Dark2}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Background="{StaticResource Light2}">
+                        <Grid Margin="5">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="5*" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Border Background="{StaticResource Light}"
+                                    CornerRadius="15"
+                                    Margin="0 10"
+                                    Padding="5 20">
+                                <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                              VerticalScrollBarVisibility="Auto">
+                                    <TextBlock x:Name="outputClientMessages"
+                                               TextWrapping="Wrap" />
+                                </ScrollViewer>
+                            </Border>
+                            <Border Grid.Row="1"
+                                    Background="{StaticResource Dark2}"
+                                    CornerRadius="15"
+                                    Margin="0 10"
+                                    Padding="5 10"
+                                    Style="{StaticResource EnabledByClientRunning}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="9*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBox x:Name="inputClientMessage"
+                                             Background="Transparent"
+                                             BorderBrush="{StaticResource Dark}" />
+                                    <Button Grid.Column="1"
+                                            Background="{StaticResource Dark}"
+                                            BorderThickness="0"
+                                            Click="OnInputClientMessageClick">
+                                        <ContentControl Content="{StaticResource SendMessageIcon}" />
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                    <StackPanel Grid.Column="1"
+                                VerticalAlignment="Center">
+                        <StackPanel Style="{StaticResource DisabledByClientRunning}">
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="20 5">
+                                <Label Content="Client:" />
+                                <ComboBox x:Name="inputClient"
+                                          Style="{StaticResource ComboBoxMain}"
+                                          ItemsSource="{Binding ElementName=ViewModel, Path=Clients}"
+                                          SelectionChanged="OnClientSelectionChanged" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="20 5">
+                                <Label Content="IP-address:"
+                                       HorizontalContentAlignment="Center" />
+                                <TextBox x:Name="inputClientIP"
+                                         Text="127.0.0.1"
+                                         Style="{StaticResource TextBoxMain}"
+                                         TextChanged="OnClientInputParametersChanged" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="20 5">
+                                <Label Content="Port:" />
+                                <TextBox x:Name="inputClientPort"
+                                         Text="8090"
+                                         Style="{StaticResource TextBoxMain}"
+                                         TextChanged="OnClientInputParametersChanged" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="20 5">
+                                <Label Content="Username:" />
+                                <TextBox x:Name="inputClientUsername"
+                                         Text="Me"
+                                         Style="{StaticResource TextBoxMain}"
+                                         TextChanged="OnClientInputParametersChanged" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center"
+                                        Margin="20 5">
+                                <Label x:Name="outputClientInputsError"
+                                       FontWeight="Bold" />
+                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel Style="{StaticResource EnabledByInputStartParams}">
+                            <Button Content="{Binding ElementName=ViewModel, Path=ConnectDisconnectButtonContent}"
+                                    Style="{StaticResource ButtonMain}"
+                                    HorizontalAlignment="Center"
+                                    Click="OnConnectDisconnectClick" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Server">
+                <Grid>
+
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
