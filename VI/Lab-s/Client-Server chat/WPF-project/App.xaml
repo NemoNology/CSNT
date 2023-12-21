@@ -2,8 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:WPF_project"
-             StartupUri="./Data/Views/Launcher.xaml">
+             StartupUri="./Data/Views/LauncherView.xaml">
     <Application.Resources>
-        <ResourceDictionary Source="./Data/Themes/MainResourceDictionary.xaml" />
+         <ResourceDictionary Source="./Data/Themes/MainResourceDictionary.xaml" />
     </Application.Resources>
 </Application>
