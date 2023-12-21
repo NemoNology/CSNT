@@ -1,56 +1,95 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using WPF_project.Data.Models.Interfaces;
 
 namespace WPF_project.Data.Models.Implementations
 {
     public class ServerUDP : IServer
     {
-        protected UdpClient client = null!;
-        public IPEndPoint IPEndPoint { get; set; }
-        public CancellationTokenSource Source { get; private set; } = null!;
+        private bool _isRunning = false;
+        private readonly List<IPEndPoint> clientsIPEndPoints = new();
+        private UdpClient client = null!;
+        private CancellationTokenSource source = null!;
+        public event EventHandler<byte[]>? DataReceived;
+        public bool IsRunning => _isRunning;
 
-        public event EventHandler<byte[]>? OnMessageReceived;
-        public bool IsRunning => Source is not null
-                && !Source.IsCancellationRequested;
-
-        public ServerUDP(IPEndPoint endPoint = null!)
+        void SocketReset(IPEndPoint endPoint)
         {
-            IPEndPoint = endPoint;
+            if (client is null || !_isRunning)
+            {
+                client = new(endPoint);
+            }
         }
 
-        public void Start()
+        public void Start(IPEndPoint endPoint)
         {
-            if (IsRunning)
+            if (_isRunning)
                 return;
 
-            Source = new();
-            client?.Close();
-            client = new();
-            client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            client.Connect(IPEndPoint);
+            source = new();
+            SocketReset(endPoint);
             Task.Run(async () =>
             {
+                UdpReceiveResult receivedResultBuffer;
+
                 try
                 {
-                    while (true)
+                    _isRunning = true;
+                    while (_isRunning)
                     {
-                        Source.Token.ThrowIfCancellationRequested();
-                        byte[] bytes = (await client.ReceiveAsync(Source.Token)).Buffer;
-                        OnMessageReceived?.Invoke(this, bytes);
+                        receivedResultBuffer = await client.ReceiveAsync(source.Token);
+
+                        if (receivedResultBuffer.Buffer == IClient.ConnectBytesData
+                            && !clientsIPEndPoints.Contains(receivedResultBuffer.RemoteEndPoint))
+                        {
+                            clientsIPEndPoints.Add(receivedResultBuffer.RemoteEndPoint);
+                            byte[] bytes = Encoding.UTF8.GetBytes($"{receivedResultBuffer.RemoteEndPoint} connected; {DateTime.Now}");
+                            SendBytes(bytes);
+                            DataReceived?.Invoke(this, bytes);
+                            continue;
+                        }
+                        else if (receivedResultBuffer.Buffer == IClient.DisconnectBytesData)
+                        {
+                            clientsIPEndPoints.Remove(receivedResultBuffer.RemoteEndPoint);
+                            byte[] bytes = Encoding.UTF8.GetBytes($"{receivedResultBuffer.RemoteEndPoint} disconnected; {DateTime.Now}");
+                            SendBytes(bytes);
+                            DataReceived?.Invoke(this, bytes);
+                            continue;
+                        }
+
+                        SendBytes(receivedResultBuffer.Buffer);
+                        DataReceived?.Invoke(this, receivedResultBuffer.Buffer);
                     }
                 }
                 catch
                 {
-                    return;
+                    _isRunning = false;
+                    SendBytes(IServer.StopBytesData);
                 }
-            }, Source.Token);
+            }, source.Token);
         }
 
         public void Stop()
         {
-            if (IsRunning)
-                Source.Cancel();
+            if (_isRunning)
+            {
+                _isRunning = false;
+                source.Cancel();
+                client.Close();
+                clientsIPEndPoints.Clear();
+            }
+        }
+
+        public void SendBytes(byte[] data)
+        {
+            if (_isRunning && clientsIPEndPoints.Count > 0)
+            {
+                foreach (IPEndPoint remoteEndPoint in clientsIPEndPoints)
+                {
+                    client.Client.SendTo(data, remoteEndPoint);
+                }
+            }
         }
 
         public override string ToString()
