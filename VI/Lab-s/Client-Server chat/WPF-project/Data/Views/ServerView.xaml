@@ -50,20 +50,27 @@
             </StackPanel>
         </Border>
         <Border Style="{StaticResource Text}"
-                Visibility="{Binding VisibleOnServerRunning}"
                 Background="{StaticResource Light2}"
+                Visibility="{Binding VisibleOnServerRunning}"
                 VerticalAlignment="Stretch"
                 HorizontalAlignment="Stretch"
+                BorderBrush="{StaticResource Dark}"
+                BorderThickness="3"
                 Margin="16">
-            <StackPanel VerticalAlignment="Stretch"
-                        HorizontalAlignment="Stretch">
+            <Grid VerticalAlignment="Stretch"
+                  HorizontalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
                 <Button Content="Остановить"
                         Click="OnStopServerClick"
                         HorizontalAlignment="Center" />
-                <ScrollViewer VerticalAlignment="Stretch">
+                <ScrollViewer Grid.Row="1"
+                              Margin="0 8">
                     <TextBlock Text="{Binding MessagesText}" />
                 </ScrollViewer>
-            </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>
