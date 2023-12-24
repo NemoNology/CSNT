@@ -1,27 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
+using WPF_project.Data.Models.Interfaces;
 
 namespace WPF_project.Data.Views
 {
     /// <summary>
     /// Interaction logic for Server.xaml
     /// </summary>
-    public partial class Server : Window
+    public partial class ServerView : Window
     {
-        public Server()
+        public ServerView()
         {
             InitializeComponent();
+        }
+
+        private void OnServersSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            viewModel.Server = (IServer)serverInput.SelectedItem;
+        }
+
+        private void OnStartServerClick(object sender, RoutedEventArgs e)
+        {
+            viewModel.Start();
+        }
+
+        private void OnStopServerClick(object sender, RoutedEventArgs e)
+        {
+            viewModel.Stop();
         }
     }
 }
