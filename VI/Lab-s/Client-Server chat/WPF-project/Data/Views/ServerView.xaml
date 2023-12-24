@@ -1,4 +1,4 @@
-﻿<Window x:Class="WPF_project.Data.Views.Server"
+﻿<Window x:Class="WPF_project.Data.Views.ServerView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,10 +7,63 @@
         xmlns:vm="clr-namespace:WPF_project.Data.ViewModels"
         mc:Ignorable="d"
         Title="Мими чат сервер"
-        Height="400" Width="640"
+        Height="400"
+        Width="640"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource Light}">
+
+    <Window.DataContext>
+        <vm:ServerViewModel x:Name="viewModel" />
+    </Window.DataContext>
+
     <Grid>
-        
+        <Border VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Background="{StaticResource Medium}"
+                Style="{StaticResource Main}"
+                Visibility="{Binding HiddenOnServerRunning}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Тип:" />
+                    <ComboBox x:Name="serverInput"
+                              ItemsSource="{Binding Servers}"
+                              SelectionChanged="OnServersSelectionChanged" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="IP-адрес:" />
+                    <TextBox Text="{Binding IPAddressText, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel>
+                    <CheckBox x:Name="IsCustomPortCheckBox"
+                              Content="Пользовательский порт" />
+                    <StackPanel Orientation="Horizontal"
+                                IsEnabled="{Binding ElementName=IsCustomPortCheckBox, Path=IsChecked}">
+                        <Label Content="Порт:" />
+                        <TextBox Text="{Binding PortText, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </StackPanel>
+                <Label Content="{Binding ErrorText}" />
+                <Button Content="Запустить"
+                        HorizontalAlignment="Center"
+                        IsEnabled="{Binding IsServerInputParametersValid}"
+                        Click="OnStartServerClick" />
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource Text}"
+                Visibility="{Binding VisibleOnServerRunning}"
+                Background="{StaticResource Light2}"
+                VerticalAlignment="Stretch"
+                HorizontalAlignment="Stretch"
+                Margin="16">
+            <StackPanel VerticalAlignment="Stretch"
+                        HorizontalAlignment="Stretch">
+                <Button Content="Остановить"
+                        Click="OnStopServerClick"
+                        HorizontalAlignment="Center" />
+                <ScrollViewer VerticalAlignment="Stretch">
+                    <TextBlock Text="{Binding MessagesText}" />
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>
