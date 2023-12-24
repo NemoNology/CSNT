@@ -3,7 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:WPF_project.Data.Views"
         mc:Ignorable="d"
         Title="Мими чат лаунчер"
         Height="160"
@@ -11,20 +10,19 @@
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource Light}">
 
-    <Window.DataContext>
-        <local:Launcher />
-    </Window.DataContext>
-
     <Grid>
         <StackPanel VerticalAlignment="Center"
                     HorizontalAlignment="Center">
             <StackPanel Orientation="Horizontal"
                         HorizontalAlignment="Center">
-                <Button Content="Запустить клиент" />
-                <Button Content="Запустить сервер" />
+                <Button Content="Запустить клиент"
+                        Click="OnLaunchClientClick" />
+                <Button Content="Запустить сервер"
+                        Click="OnLaunchServerClick" />
             </StackPanel>
             <CheckBox Content="Выключить лаунчер после запуска программы"
-                      HorizontalAlignment="Center" />
+                      HorizontalAlignment="Center"
+                      IsChecked="{Binding IsLauncherCloseAfterProgramLaunch, Mode=OneWayToSource}" />
         </StackPanel>
     </Grid>
 </Window>
