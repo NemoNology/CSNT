@@ -4,10 +4,10 @@ namespace WPF_project.Data.Models.Interfaces
 {
     public interface IClient
     {
-        public static readonly byte[] DisconnectBytesData = Array.Empty<byte>();
-        public static readonly byte[] ConnectBytesData = { 1 };
+        public static readonly byte[] ConnectionRequestBytesData = { 1 };
+        public static readonly byte[] DisconnectNotificationBytesData = { 0 };
         /// <summary>
-        /// Raise when remote host received data
+        /// Raise when client received data
         /// </summary>
         public event EventHandler<byte[]>? DataReceived;
         /// <summary>
@@ -23,7 +23,9 @@ namespace WPF_project.Data.Models.Interfaces
         /// Connect to remote host
         /// </summary>
         /// <param name="endPoint">Remote host IP-endpoint</param>
-        public void Connect(IPEndPoint endPoint);
+        /// <param name="connectionTime">Time given for connection</param>
+        /// <returns><c>true</c> if connection was successful; <c>false</c> - otherwise</returns>
+        public bool Connect(IPEndPoint endPoint, TimeSpan connectionTime);
         /// <summary>
         /// Disconnect from connected host
         /// </summary>
