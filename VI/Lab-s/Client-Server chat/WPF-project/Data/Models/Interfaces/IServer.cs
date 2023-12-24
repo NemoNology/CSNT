@@ -5,7 +5,8 @@ namespace WPF_project.Data.Models.Interfaces
 {
     public interface IServer
     {
-        public static readonly byte[] StopBytesData = Array.Empty<byte>();
+        public static readonly byte[] ConnectionAcceptingBytesData = { 1 };
+        public static readonly byte[] ShutdownNotificationBytesData = { 9 };
         /// <summary>
         /// Raise when server received data
         /// </summary>
