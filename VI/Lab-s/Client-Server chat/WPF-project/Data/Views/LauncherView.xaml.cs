@@ -31,7 +31,7 @@ namespace WPF_project.Data.Views
 
         private void OnLaunchClientClick(object sender, RoutedEventArgs e)
         {
-            new Client().Show();
+            new ClientView().Show();
             CloseIfNeeded();
         }
 
