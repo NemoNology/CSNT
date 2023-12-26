@@ -15,7 +15,7 @@ namespace WPF_project.Data.Views
 
         private void OnServersSelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            viewModel.Server = (IServer)serverInput.SelectedItem;
+            viewModel.Server = (Server)serverInput.SelectedItem;
         }
 
         private void OnStartServerClick(object sender, RoutedEventArgs e)

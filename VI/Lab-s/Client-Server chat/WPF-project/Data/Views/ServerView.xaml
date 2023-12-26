@@ -17,11 +17,9 @@
     </Window.DataContext>
 
     <Grid>
-        <Border VerticalAlignment="Center"
-                HorizontalAlignment="Center"
+        <Border Style="{StaticResource Main}"
                 Background="{StaticResource Medium}"
-                Style="{StaticResource Main}"
-                Visibility="{Binding HiddenOnServerRunning}">
+                Visibility="{Binding HiddenOnServerRunning, UpdateSourceTrigger=PropertyChanged}">
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Тип:" />
@@ -45,13 +43,13 @@
                 <Label Content="{Binding ErrorText}" />
                 <Button Content="Запустить"
                         HorizontalAlignment="Center"
-                        IsEnabled="{Binding IsServerInputParametersValid}"
+                        IsEnabled="{Binding IsInputParametersValid}"
                         Click="OnStartServerClick" />
             </StackPanel>
         </Border>
         <Border Style="{StaticResource Text}"
                 Background="{StaticResource Light2}"
-                Visibility="{Binding VisibleOnServerRunning}"
+                Visibility="{Binding VisibleOnServerRunning, UpdateSourceTrigger=PropertyChanged}"
                 VerticalAlignment="Stretch"
                 HorizontalAlignment="Stretch"
                 BorderBrush="{StaticResource Dark}"
