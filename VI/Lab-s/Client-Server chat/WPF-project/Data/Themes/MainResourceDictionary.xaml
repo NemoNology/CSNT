@@ -42,11 +42,19 @@
                 Value="Center" />
         <Setter Property="Width"
                 Value="auto" />
+        <Setter Property="VerticalScrollBarVisibility"
+                Value="Auto" />
+        <Setter Property="HorizontalScrollBarVisibility"
+                Value="Auto" />
     </Style>
     <Style x:Key="Main"
            TargetType="Border">
         <Setter Property="CornerRadius"
                 Value="16" />
+        <Setter Property="VerticalAlignment"
+                Value="Center" />
+        <Setter Property="HorizontalAlignment"
+                Value="Center" />
     </Style>
     <Style x:Key="Text"
            TargetType="Border"
