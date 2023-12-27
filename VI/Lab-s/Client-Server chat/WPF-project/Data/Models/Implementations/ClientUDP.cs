@@ -4,78 +4,86 @@ using WPF_project.Data.Models.Interfaces;
 
 namespace WPF_project.Data.Models.Implementations
 {
-    public class ClientUDP : IClient
+    public class ClientUDP : Client
     {
-        private bool _isConnected = false;
-        private Socket socket = null!;
-        private CancellationTokenSource source = null!;
-        public event EventHandler<byte[]>? DataReceived;
-        public event EventHandler? ConnectionWithServerLost;
-        public bool IsConnected => _isConnected;
+        public override event EventHandler<byte[]>? DataReceived;
+        public override event EventHandler? ConnectionWithServerLost;
+        private Socket _socket = null!;
 
-        void SocketReset()
-        {
-            if (socket is null || !_isConnected)
-            {
-                socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            }
-        }
-
-        public void Connect(IPEndPoint endPoint)
+        public override async Task<bool> Connect(IPEndPoint endPoint, CancellationToken waitingConnectionCancellationToken)
         {
             if (_isConnected)
-                return;
+                return false;
 
-            SocketReset();
-            source = new();
-            socket.Connect(endPoint);
-            Task.Run(async () =>
-            {
-                ArraySegment<byte> bytesBuffer = new byte[4096];
-                int receivedBytesSize;
-                SendBytes(IClient.ConnectBytesData);
-
-                try
+            _source = new();
+            _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _socket.Connect(endPoint);
+            _isConnected = true;
+            // Check server answer
+            _isConnected = await Task.Run(
+                () =>
                 {
-                    _isConnected = true;
-                    while (_isConnected)
+                    SendData(ConnectionRequestBytesData);
+                    int neededDataLength = Server.ConnectionAcceptingBytesData.Length;
+                    byte[] dataBuffer = new byte[neededDataLength];
+
+                    while (!waitingConnectionCancellationToken.IsCancellationRequested)
                     {
-                        receivedBytesSize = await socket.ReceiveAsync(
-                                bytesBuffer,
-                                SocketFlags.None,
-                                source.Token);
-
-                        if (bytesBuffer == IServer.StopBytesData)
+                        if (_socket.Available >= neededDataLength)
                         {
-                            ConnectionWithServerLost?.Invoke(this, EventArgs.Empty);
-                            return;
+                            _socket.Receive(dataBuffer, neededDataLength, SocketFlags.None);
+                            if (Enumerable.SequenceEqual(dataBuffer, Server.ConnectionAcceptingBytesData))
+                                return true;
                         }
-
-                        DataReceived?.Invoke(this, bytesBuffer.ToArray()[..receivedBytesSize]);
                     }
-                }
-                catch
+
+                    return false;
+                });
+
+            // If server accept request -> Start listen server
+            if (_isConnected)
+            {
+                _ = Task.Run(() =>
                 {
-                    _isConnected = false;
-                }
-            }, source.Token);
+                    byte[] bytesBuffer = new byte[4096];
+                    int receivedBytesSize;
+
+                    while (!_source.IsCancellationRequested)
+                    {
+                        if (_socket.Available > 0)
+                        {
+                            receivedBytesSize = _socket.Receive(bytesBuffer);
+
+                            if (Enumerable.SequenceEqual(bytesBuffer, Server.ShutdownNotificationBytesData))
+                            {
+                                ConnectionWithServerLost?.Invoke(this, EventArgs.Empty);
+                                Disconnect();
+                            }
+
+                            DataReceived?.Invoke(this, bytesBuffer.ToArray()[..receivedBytesSize]);
+                        }
+                    }
+                });
+            }
+
+            return _isConnected;
         }
 
-        public void Disconnect()
+        public override void Disconnect()
         {
             if (_isConnected)
             {
+                SendData(DisconnectNotificationBytesData);
                 _isConnected = false;
-                SendBytes(IClient.DisconnectBytesData);
-                source.Cancel();
-                socket.Close();
+                _source.Cancel();
+                _socket.Close();
             }
         }
 
-        public void SendBytes(byte[] bytes)
+        public override void SendData(byte[] bytes)
         {
             if (_isConnected)
-                socket.Send(bytes);
+                _socket.Send(bytes);
         }
 
         public override string ToString()
