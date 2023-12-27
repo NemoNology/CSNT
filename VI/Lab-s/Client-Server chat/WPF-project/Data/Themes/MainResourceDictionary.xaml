@@ -57,10 +57,15 @@
                 Value="Center" />
     </Style>
     <Style x:Key="Text"
-           TargetType="Border"
-           BasedOn="{StaticResource Main}">
+           TargetType="Border">
         <Setter Property="Padding"
                 Value="16 8" />
+        <Setter Property="Margin"
+                Value="16" />
+        <Setter Property="BorderThickness"
+                Value="3" />
+        <Setter Property="CornerRadius"
+                Value="16" />
     </Style>
     <Style TargetType="ScrollViewer">
         <Setter Property="VerticalScrollBarVisibility"
