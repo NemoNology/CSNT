@@ -50,11 +50,7 @@
         <Border Style="{StaticResource Text}"
                 Background="{StaticResource Light2}"
                 Visibility="{Binding VisibleOnServerRunning, UpdateSourceTrigger=PropertyChanged}"
-                VerticalAlignment="Stretch"
-                HorizontalAlignment="Stretch"
-                BorderBrush="{StaticResource Dark}"
-                BorderThickness="3"
-                Margin="16">
+                BorderBrush="{StaticResource Dark}">
             <Grid VerticalAlignment="Stretch"
                   HorizontalAlignment="Stretch">
                 <Grid.RowDefinitions>
