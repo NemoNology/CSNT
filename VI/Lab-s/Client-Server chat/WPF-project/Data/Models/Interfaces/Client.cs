@@ -27,7 +27,7 @@ namespace WPF_project.Data.Models.Interfaces
         /// <param name="endPoint">Remote host IP-endpoint</param>
         /// <param name="connectionTime">Time given for connection</param>
         /// <returns><c>true</c> if connection was successful; <c>false</c> - otherwise</returns>
-        public abstract bool Connect(IPEndPoint endPoint, TimeSpan connectionTime);
+        public abstract Task<bool> Connect(IPEndPoint endPoint, TimeSpan connectionTime);
         /// <summary>
         /// Disconnect from connected host
         /// </summary>

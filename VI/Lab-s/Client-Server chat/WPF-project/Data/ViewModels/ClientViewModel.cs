@@ -110,6 +110,7 @@ namespace WPF_project.Data.ViewModels
             {
                 OnPropertyChanged(nameof(IsClientConnecting));
                 OnPropertyChanged(nameof(IsClientConnected));
+                OnPropertyChanged(nameof(ConnectionStatementText));
             }
             else if (e.PropertyName == nameof(IsClientConnecting))
             {
@@ -118,10 +119,10 @@ namespace WPF_project.Data.ViewModels
             }
         }
 
-        public void Connect()
+        public async void Connect()
         {
             ConnectionStatement = null;
-            ConnectionStatement = Client.Connect(_ipEndPoint, new TimeSpan(0, 0, 2));   
+            ConnectionStatement = await Client.Connect(_ipEndPoint, new TimeSpan(0, 0, 3));   
         }
 
         public void Disconnect()
