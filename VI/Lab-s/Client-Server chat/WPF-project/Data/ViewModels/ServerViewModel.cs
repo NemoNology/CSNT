@@ -62,10 +62,5 @@ namespace WPF_project.Data.ViewModels
             Server.Stop();
             OnPropertyChanged(nameof(IsServerRunning));
         }
-
-        protected override void OnDataReceived(object? sender, byte[] data)
-        {
-            MessagesText += $"{Encoding.UTF8.GetString(data)} {{{DateTime.Now}}}\n";
-        }
     }
 }
