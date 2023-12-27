@@ -1,15 +1,107 @@
-﻿<Window x:Class="WPF_project.Data.Views.Client"
+﻿<Window x:Class="WPF_project.Data.Views.ClientView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WPF_project.Data.Views"
+        xmlns:vm="clr-namespace:WPF_project.Data.ViewModels"
         mc:Ignorable="d"
         Title="Мими чат клиент"
-        Height="400" Width="640"
+        Height="400"
+        Width="640"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource Light}">
+
+    <Window.DataContext>
+        <vm:ClientViewModel x:Name="viewModel" />
+    </Window.DataContext>
+
     <Grid>
-        
+        <Border Style="{StaticResource Main}"
+                Visibility="{Binding HiddenOnClientConnectedOrConnecting}"
+                Background="{StaticResource Medium}">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Тип:" />
+                    <ComboBox x:Name="clientInput"
+                              ItemsSource="{Binding Clients}"
+                              SelectionChanged="OnClientsSelectionChanged" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="IP-адрес сервера:" />
+                    <TextBox Text="{Binding IPAddressText, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel>
+                    <CheckBox x:Name="IsCustomPortCheckBox"
+                              Content="Пользовательский порт сервера" />
+                    <StackPanel Orientation="Horizontal"
+                                IsEnabled="{Binding ElementName=IsCustomPortCheckBox, Path=IsChecked}">
+                        <Label Content="Порт сервера:" />
+                        <TextBox Text="{Binding PortText, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Имя клиента:" />
+                    <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <Label Content="{Binding ErrorText}"
+                       HorizontalAlignment="Center" />
+                <Button Content="Подключиться"
+                        HorizontalAlignment="Center"
+                        Click="OnConnectClick"
+                        IsEnabled="{Binding IsInputParametersValid}" />
+            </StackPanel>
+        </Border>
+        <Border Style="{StaticResource Main}"
+                Background="{StaticResource Medium}"
+                Visibility="{Binding VisibleOnClientConnecting}">
+            <StackPanel>
+                <Label Content="{Binding ConnectionStatementText}"
+                       HorizontalContentAlignment="Center" />
+                <Button Content="Вернуться"
+                        Click="OnReturnClick" />
+            </StackPanel>
+        </Border>
+        <Grid Visibility="{Binding VisibleOnClientConnected}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+            <Border Style="{StaticResource Text}"
+                    Background="{StaticResource Light2}"
+                    BorderBrush="{StaticResource Dark}"
+                    Margin="16 16 16 0">
+                <Grid VerticalAlignment="Stretch"
+                      HorizontalAlignment="Stretch">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Button Content="Отключиться"
+                            Click="OnDisconnectClick"
+                            HorizontalAlignment="Center" />
+                    <ScrollViewer Grid.Row="1"
+                                  Margin="0 8">
+                        <TextBlock Text="{Binding MessagesText}" />
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Text}"
+                    Background="{StaticResource Medium}"
+                    BorderBrush="{StaticResource Dark}"
+                    Grid.Row="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding MessageText}"
+                             Background="Transparent" />
+                    <Button Grid.Column="1"
+                            Content="Отправить сообщение"
+                            Click="OnSendMessageClick" />
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
