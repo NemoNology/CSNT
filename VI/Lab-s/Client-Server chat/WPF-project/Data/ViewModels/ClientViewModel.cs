@@ -75,8 +75,8 @@ namespace WPF_project.Data.ViewModels
         public void ResetConnectionStatement()
         {
             _awaitingConnectionCancalletionSource.Cancel();
-            Disconnect();
             ConnectionStatement = true;
+            Disconnect();
         }
 
         protected override void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
