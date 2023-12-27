@@ -1,16 +1,15 @@
 ﻿using System.ComponentModel;
-using System.Net;
 using System.Text;
 using System.Windows;
 using WPF_project.Data.Models.Implementations;
 using WPF_project.Data.Models.Interfaces;
-using WPF_project.Data.Views;
 
 namespace WPF_project.Data.ViewModels
 {
     class ClientViewModel : ViewModelSharedBetweenClient
     {
         private readonly Client[] _clients = { new ClientUDP() };
+        private CancellationTokenSource _awaitingConnectionCancalletionSource = null!;
         private Client _client = null!;
         private string _messageText = string.Empty;
         private string _username = "Некто";
@@ -75,6 +74,8 @@ namespace WPF_project.Data.ViewModels
 
         public void ResetConnectionStatement()
         {
+            _awaitingConnectionCancalletionSource.Cancel();
+            Disconnect();
             ConnectionStatement = true;
         }
 
@@ -122,13 +123,15 @@ namespace WPF_project.Data.ViewModels
         public async void Connect()
         {
             ConnectionStatement = null;
-            ConnectionStatement = await Client.Connect(_ipEndPoint, new TimeSpan(0, 0, 3));   
+            _awaitingConnectionCancalletionSource = new();
+            ConnectionStatement = await Client.Connect(_ipEndPoint, _awaitingConnectionCancalletionSource.Token);
         }
 
         public void Disconnect()
         {
             Client.Disconnect();
-            ResetConnectionStatement();
+            if (IsClientConnecting)
+                ResetConnectionStatement();
             OnPropertyChanged(nameof(IsClientConnected));
         }
 
