@@ -43,7 +43,7 @@ namespace WPF_project.Data.ViewModels
             }
         }
         public string ErrorText => IsInputParametersValid ? "" : "Входные параметры некорректны";
-        public bool IsIPAddressAndPortValid => 
+        public bool IsIPAddressAndPortValid =>
             IPAddress.TryParse(IPAddressText, out _)
             && ushort.TryParse(PortText, out _);
         abstract public bool IsInputParametersValid { get; }
@@ -54,7 +54,7 @@ namespace WPF_project.Data.ViewModels
             _portText = _ipEndPoint.Port.ToString();
             PropertyChanged += OnPropertyChanged;
         }
-        
+
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -62,9 +62,9 @@ namespace WPF_project.Data.ViewModels
 
         protected abstract void OnPropertyChanged(object? sender, PropertyChangedEventArgs e);
 
-        protected virtual void OnDataReceived(object? sender, byte[] data)
+        protected void OnDataReceived(object? sender, byte[] data)
         {
-            MessagesText += $"{Encoding.UTF8.GetString(data)}\n";
+            MessagesText += $"{Encoding.UTF8.GetString(data)} {{{DateTime.Now}}}\n";
         }
     }
 }
