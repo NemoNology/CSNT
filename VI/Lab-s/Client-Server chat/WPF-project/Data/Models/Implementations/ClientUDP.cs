@@ -10,6 +10,11 @@ namespace WPF_project.Data.Models.Implementations
         public override event EventHandler? ConnectionWithServerLost;
         private Socket _socket = null!;
 
+        ~ClientUDP()
+        {
+            Disconnect();
+        }
+
         public override async Task<bool> Connect(
             IPEndPoint clientIPEndPoint,
             IPEndPoint serverIPEndPoint,
@@ -20,8 +25,16 @@ namespace WPF_project.Data.Models.Implementations
 
             _source = new();
             _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            _socket.Bind(clientIPEndPoint);
-            _socket.Connect(serverIPEndPoint);
+            try
+            {
+                _socket.Bind(clientIPEndPoint);
+                _socket.Connect(serverIPEndPoint);
+            }
+            catch
+            {
+                _socket.Close();
+                return false;
+            }
             _isConnected = true;
             // Check server answer
             _isConnected = await Task.Run(
@@ -35,7 +48,16 @@ namespace WPF_project.Data.Models.Implementations
                     {
                         if (_socket.Available >= neededDataLength)
                         {
-                            _socket.Receive(dataBuffer, neededDataLength, SocketFlags.None);
+                            try
+                            {
+                                _socket.Receive(dataBuffer, neededDataLength, SocketFlags.None);
+                            }
+                            catch
+                            {
+                                _socket.Close();
+                                return false;
+                            }
+
                             if (Enumerable.SequenceEqual(dataBuffer, Server.ConnectionAcceptingBytesData))
                                 return true;
                         }
@@ -58,13 +80,13 @@ namespace WPF_project.Data.Models.Implementations
                         {
                             receivedBytesSize = _socket.Receive(bytesBuffer);
 
-                            if (Enumerable.SequenceEqual(bytesBuffer, Server.ShutdownNotificationBytesData))
+                            if (Enumerable.SequenceEqual(bytesBuffer[..receivedBytesSize], Server.ShutdownNotificationBytesData))
                             {
                                 ConnectionWithServerLost?.Invoke(this, EventArgs.Empty);
                                 Disconnect();
                             }
 
-                            DataReceived?.Invoke(this, bytesBuffer.ToArray()[..receivedBytesSize]);
+                            DataReceived?.Invoke(this, bytesBuffer[..receivedBytesSize]);
                         }
                     }
                 });
