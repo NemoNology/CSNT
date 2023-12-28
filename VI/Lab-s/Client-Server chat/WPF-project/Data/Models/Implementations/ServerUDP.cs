@@ -14,6 +14,11 @@ namespace WPF_project.Data.Models.Implementations
         /// </summary>
         private readonly List<IPEndPoint> _clientsIPEndPoints = new(2);
 
+        ~ServerUDP()
+        {
+            Stop();
+        }
+
         public override void Start(IPEndPoint endPoint)
         {
             if (_isRunning)
