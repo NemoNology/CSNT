@@ -9,7 +9,7 @@ namespace WPF_project.Data.ViewModels
 {
     class ClientViewModel : ViewModelSharedBetweenClient
     {
-        private readonly Client[] _clients = { new ClientUDP() };
+        private readonly Client[] _clients = { new ClientUDP(), new ClientTCP() };
         private CancellationTokenSource _awaitingConnectionCancalletionSource = null!;
         private readonly IPEndPoint _clientIPEndPoint = new(IPAddress.Loopback, 40405);
         private string _clientIPAddressText = string.Empty;
@@ -169,9 +169,10 @@ namespace WPF_project.Data.ViewModels
 
         private void OnServerConnectionLost(object? sender, EventArgs e)
         {
+            Disconnect();
             ConnectionStatement = false;
         }
-        
+
         public async void Connect()
         {
             ConnectionStatement = null;
