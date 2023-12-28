@@ -7,30 +7,26 @@ namespace WPF_project.Data.ViewModels
     abstract class ViewModelSharedBetweenClient : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
-        protected readonly IPEndPoint _ipEndPoint = new(IPAddress.Loopback, 40404);
-        protected string _ipAddressText = string.Empty;
-        protected string _portText = string.Empty;
+        protected readonly IPEndPoint _serverIPEndPoint = new(IPAddress.Loopback, 40404);
+        protected string _serverIPAddressText = string.Empty;
+        protected string _serverPortText = string.Empty;
         protected string _messagesText = string.Empty;
-        public string IPAddressText
+        public string ServerIPAddressText
         {
-            get => _ipAddressText;
+            get => _serverIPAddressText;
             set
             {
-                _ipAddressText = value;
-                if (IPAddress.TryParse(_ipAddressText, out var address))
-                    _ipEndPoint.Address = address;
-                OnPropertyChanged(nameof(IPAddressText));
+                _serverIPAddressText = value;
+                OnPropertyChanged(nameof(ServerIPAddressText));
             }
         }
-        public string PortText
+        public string ServerPortText
         {
-            get => _portText;
+            get => _serverPortText;
             set
             {
-                _portText = value;
-                if (ushort.TryParse(_portText, out var port))
-                    _ipEndPoint.Port = port;
-                OnPropertyChanged(nameof(PortText));
+                _serverPortText = value;
+                OnPropertyChanged(nameof(ServerPortText));
             }
         }
         public string MessagesText
@@ -42,16 +38,28 @@ namespace WPF_project.Data.ViewModels
                 OnPropertyChanged(nameof(MessagesText));
             }
         }
-        public string ErrorText => IsInputParametersValid ? "" : "Входные параметры некорректны";
-        public bool IsIPAddressAndPortValid =>
-            IPAddress.TryParse(IPAddressText, out _)
-            && ushort.TryParse(PortText, out _);
-        abstract public bool IsInputParametersValid { get; }
+        public string ErrorText => AreInputParametersValid ? "" : "Входные параметры некорректны";
+        public bool AreServerIPAddressAndPortValid
+        {
+            get
+            {
+                var isIPAddressValid = IPAddress.TryParse(ServerIPAddressText, out var ipAddress);
+                var isPortValid = ushort.TryParse(ServerPortText, out var port);
+
+                if (isIPAddressValid)
+                    _serverIPEndPoint.Address = ipAddress!;
+                if (isPortValid)
+                    _serverIPEndPoint.Port = port!;
+
+                return isIPAddressValid && isPortValid;
+            }
+        }
+        public abstract bool AreInputParametersValid { get; }
 
         public ViewModelSharedBetweenClient()
         {
-            _ipAddressText = _ipEndPoint.Address.ToString();
-            _portText = _ipEndPoint.Port.ToString();
+            _serverIPAddressText = _serverIPEndPoint.Address.ToString();
+            _serverPortText = _serverIPEndPoint.Port.ToString();
             PropertyChanged += OnPropertyChanged;
         }
 
