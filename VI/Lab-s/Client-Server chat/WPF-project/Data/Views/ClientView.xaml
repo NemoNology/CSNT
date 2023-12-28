@@ -29,16 +29,19 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="IP-адрес сервера:" />
-                    <TextBox Text="{Binding IPAddressText, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Text="{Binding ServerIPAddressText, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
-                <StackPanel>
-                    <CheckBox x:Name="IsCustomPortCheckBox"
-                              Content="Пользовательский порт сервера" />
-                    <StackPanel Orientation="Horizontal"
-                                IsEnabled="{Binding ElementName=IsCustomPortCheckBox, Path=IsChecked}">
-                        <Label Content="Порт сервера:" />
-                        <TextBox Text="{Binding PortText, UpdateSourceTrigger=PropertyChanged}" />
-                    </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Порт сервера:" />
+                    <TextBox Text="{Binding ServerPortText, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="IP-адрес клиента:" />
+                    <TextBox Text="{Binding ClientIPAddressText, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Порт клиента:" />
+                    <TextBox Text="{Binding ClientPortText, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Имя клиента:" />
