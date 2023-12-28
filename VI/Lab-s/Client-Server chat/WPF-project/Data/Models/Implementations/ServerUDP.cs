@@ -78,8 +78,8 @@ namespace WPF_project.Data.Models.Implementations
         {
             if (_isRunning)
             {
-                _isRunning = false;
                 SendData(ShutdownNotificationBytesData);
+                _isRunning = false;
                 _source.Cancel();
                 _client.Close();
                 _clientsIPEndPoints.Clear();
