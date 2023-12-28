@@ -22,24 +22,24 @@ namespace WPF_project.Data.ViewModels
         public bool IsServerRunning => Server is not null && Server.IsRunning;
         public Visibility VisibleOnServerRunning => IsServerRunning ? Visibility.Visible : Visibility.Collapsed;
         public Visibility HiddenOnServerRunning => IsServerRunning ? Visibility.Collapsed : Visibility.Visible;
-        public override bool IsInputParametersValid =>
-            Server is not null && IsIPAddressAndPortValid;
+        public override bool AreInputParametersValid =>
+            Server is not null && AreServerIPAddressAndPortValid;
 
         protected override void OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(Server))
             {
-                OnPropertyChanged(nameof(IsInputParametersValid));
+                OnPropertyChanged(nameof(AreInputParametersValid));
                 OnPropertyChanged(nameof(IsServerRunning));
                 Server.DataReceived += OnDataReceived;
                 MessagesText = "";
             }
-            else if (e.PropertyName == nameof(IPAddressText)
-                || e.PropertyName == nameof(PortText))
+            else if (e.PropertyName == nameof(ServerIPAddressText)
+                || e.PropertyName == nameof(ServerPortText))
             {
-                OnPropertyChanged(nameof(IsInputParametersValid));
+                OnPropertyChanged(nameof(AreInputParametersValid));
             }
-            else if (e.PropertyName == nameof(IsInputParametersValid))
+            else if (e.PropertyName == nameof(AreInputParametersValid))
             {
                 OnPropertyChanged(nameof(ErrorText));
             }
@@ -53,7 +53,7 @@ namespace WPF_project.Data.ViewModels
 
         public void Start()
         {
-            Server.Start(_ipEndPoint);
+            Server.Start(_serverIPEndPoint);
             OnPropertyChanged(nameof(IsServerRunning));
         }
 
