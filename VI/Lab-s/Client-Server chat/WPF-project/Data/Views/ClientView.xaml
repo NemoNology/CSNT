@@ -27,32 +27,36 @@
                               ItemsSource="{Binding Clients}"
                               SelectionChanged="OnClientsSelectionChanged" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="IP-адрес сервера:" />
-                    <TextBox Text="{Binding ServerIPAddressText, UpdateSourceTrigger=PropertyChanged}" />
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="IP-адрес сервера:" />
+                        <TextBox Text="{Binding ServerIPAddressText, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Порт сервера:" />
+                        <TextBox Text="{Binding ServerPortText, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт сервера:" />
-                    <TextBox Text="{Binding ServerPortText, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="IP-адрес клиента:" />
-                    <TextBox Text="{Binding ClientIPAddressText, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Порт клиента:" />
-                    <TextBox Text="{Binding ClientPortText, UpdateSourceTrigger=PropertyChanged}" />
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Имя клиента:" />
-                    <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="IP-адрес клиента:" />
+                        <TextBox Text="{Binding ClientIPAddressText, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Порт клиента:" />
+                        <TextBox Text="{Binding ClientPortText, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Имя клиента:" />
+                        <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
                 </StackPanel>
                 <Label Content="{Binding ErrorText}"
                        HorizontalAlignment="Center" />
                 <Button Content="Подключиться"
                         HorizontalAlignment="Center"
                         Click="OnConnectClick"
-                        IsEnabled="{Binding IsInputParametersValid}" />
+                        IsEnabled="{Binding AreInputParametersValid}" />
             </StackPanel>
         </Border>
         <Border Style="{StaticResource Main}"
@@ -98,11 +102,12 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBox Text="{Binding MessageText}"
+                    <TextBox Text="{Binding MessageText, UpdateSourceTrigger=PropertyChanged}"
                              Background="Transparent" />
                     <Button Grid.Column="1"
                             Content="Отправить сообщение"
-                            Click="OnSendMessageClick" />
+                            Click="OnSendMessageClick"
+                            IsEnabled="{Binding EnabledOnMessageValid}" />
                 </Grid>
             </Border>
         </Grid>

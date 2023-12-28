@@ -38,7 +38,7 @@
                 <Label Content="{Binding ErrorText}" />
                 <Button Content="Запустить"
                         HorizontalAlignment="Center"
-                        IsEnabled="{Binding IsInputParametersValid}"
+                        IsEnabled="{Binding AreInputParametersValid}"
                         Click="OnStartServerClick" />
             </StackPanel>
         </Border>
