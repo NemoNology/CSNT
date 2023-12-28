@@ -25,10 +25,14 @@ namespace WPF_project.Data.Models.Interfaces
         /// <summary>
         /// Connect to remote host
         /// </summary>
-        /// <param name="endPoint">Remote host IP-endpoint</param>
+        /// <param name="clientIPEndPoint">Client (local host) IP-endpoint</param>
+        /// <param name="serverIPEndPoint">Server (remote host) IP-endpoint</param>
         /// <param name="waitingConnectionCancellationToken">Awating connection cancellation token</param>
         /// <returns><c>true</c> if connection was successful; <c>false</c> - otherwise</returns>
-        public abstract Task<bool> Connect(IPEndPoint endPoint, CancellationToken waitingConnectionCancellationToken);
+        public abstract Task<bool> Connect(
+            IPEndPoint clientIPEndPoint,
+            IPEndPoint serverIPEndPoint,
+            CancellationToken waitingConnectionCancellationToken);
 
         /// <summary>
         /// Disconnect from connected host
