@@ -29,16 +29,11 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="IP-адрес:" />
-                    <TextBox Text="{Binding IPAddressText, UpdateSourceTrigger=PropertyChanged}" />
+                    <TextBox Text="{Binding ServerIPAddressText, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
-                <StackPanel>
-                    <CheckBox x:Name="IsCustomPortCheckBox"
-                              Content="Пользовательский порт" />
-                    <StackPanel Orientation="Horizontal"
-                                IsEnabled="{Binding ElementName=IsCustomPortCheckBox, Path=IsChecked}">
-                        <Label Content="Порт:" />
-                        <TextBox Text="{Binding PortText, UpdateSourceTrigger=PropertyChanged}" />
-                    </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Порт:" />
+                    <TextBox Text="{Binding ServerPortText, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
                 <Label Content="{Binding ErrorText}" />
                 <Button Content="Запустить"
