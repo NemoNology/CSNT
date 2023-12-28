@@ -10,14 +10,18 @@ namespace WPF_project.Data.Models.Implementations
         public override event EventHandler? ConnectionWithServerLost;
         private Socket _socket = null!;
 
-        public override async Task<bool> Connect(IPEndPoint endPoint, CancellationToken waitingConnectionCancellationToken)
+        public override async Task<bool> Connect(
+            IPEndPoint clientIPEndPoint,
+            IPEndPoint serverIPEndPoint,
+            CancellationToken waitingConnectionCancellationToken)
         {
             if (_isConnected)
                 return false;
 
             _source = new();
             _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            _socket.Connect(endPoint);
+            _socket.Bind(clientIPEndPoint);
+            _socket.Connect(serverIPEndPoint);
             _isConnected = true;
             // Check server answer
             _isConnected = await Task.Run(
