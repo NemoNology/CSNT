@@ -25,6 +25,14 @@ namespace CSNT.Clientserverchat.Data.Models
             _socket = new(addressFamily, socketType, protocolType);
         }
 
+        ~Server()
+        {
+            Stop();
+            _socket.Shutdown(SocketShutdown.Both);
+            _socket.Dispose();
+            _cancellationTokenSource.Dispose();
+        }
+
         public void Start(IPAddress ipAddress, int port)
         {
             if (_isRunning)
