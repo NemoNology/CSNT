@@ -17,6 +17,7 @@ namespace CSNT.Clientserverchat.Data.Models
         private readonly List<Socket> _clientsSockets = new(2);
         private readonly List<byte[]> _messagesBytes = new(16);
 
+        public event Action<byte[]> MessageReceived;
         public bool IsRunning => _isRunning;
 
         public Server(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType)
@@ -32,6 +33,7 @@ namespace CSNT.Clientserverchat.Data.Models
             _socket.Bind(new IPEndPoint(ipAddress, port));
             _isRunning = true;
             _messagesBytes.Add(Encoding.UTF8.GetBytes($"Server ({_socket.LocalEndPoint}) ({DateTime.Now}) started"));
+            MessageReceived?.Invoke(_messagesBytes[^1]);
             // Thread for accepting connections
             Task.Run(() =>
             {
@@ -124,6 +126,7 @@ namespace CSNT.Clientserverchat.Data.Models
 
         private void SendLastMessageToClients()
         {
+            MessageReceived?.Invoke(_messagesBytes[^1]);
             foreach (Socket socket in _clientsSockets)
             {
                 if (socket.SafeHandle.IsClosed)
