@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace CSNT.Clientserverchat.Data.Models
 {
-    public abstract class Server
+    public class Server
     {
         private readonly Socket _socket;
         private bool _isRunning = false;
@@ -31,6 +31,7 @@ namespace CSNT.Clientserverchat.Data.Models
 
             _socket.Bind(new IPEndPoint(ipAddress, port));
             _isRunning = true;
+            _messagesBytes.Add(Encoding.UTF8.GetBytes($"Server ({_socket.LocalEndPoint}) ({DateTime.Now}) started"));
             // Thread for accepting connections
             Task.Run(() =>
             {
