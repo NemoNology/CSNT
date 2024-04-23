@@ -28,8 +28,9 @@ namespace CSNT.Clientserverchat.Data.Models
 
             _socket.Bind(new IPEndPoint(ipAddress, port));
             _isRunning = true;
-            _messagesBytes.Add(Encoding.UTF8.GetBytes($"Server ({_socket.LocalEndPoint}) ({DateTime.Now}) started"));
-            MessageReceived?.Invoke(_messagesBytes[^1]);
+            _messagesBytes.Add(Encoding.UTF8.GetBytes($"Сервер ({_socket.LocalEndPoint}) ({DateTime.Now}) запущен"));
+            // Add init massage to messages
+            SendLastMessageToClients();
             // Thread for receiving messages
             Task.Run(() =>
             {
@@ -54,6 +55,7 @@ namespace CSNT.Clientserverchat.Data.Models
                                 Encoding.UTF8.GetBytes(
                                     $"{clientIpEndPoint} ({DateTime.Now} подключился)"));
                         }
+                        // Notify clients about new client connection
                         SendLastMessageToClients();
                     }
 
@@ -67,10 +69,9 @@ namespace CSNT.Clientserverchat.Data.Models
                                 .Concat(buffer[..reciedBytesLength])
                                 .ToArray());
                         }
+                        // Send recieved message to every client
+                        SendLastMessageToClients();
                     }
-
-                    // Send last message to every client
-                    SendLastMessageToClients();
                 }
             }, _cancellationTokenSource.Token);
             // Thread for check clients disconnections
@@ -120,6 +121,7 @@ namespace CSNT.Clientserverchat.Data.Models
 
         private void SendLastMessageToClients()
         {
+            MessageReceived?.Invoke(_messagesBytes[^1]);
             foreach (IPEndPoint endPoint in _clientsIpEndPoints)
                 _socket.SendTo(_messagesBytes[^1], endPoint);
         }
