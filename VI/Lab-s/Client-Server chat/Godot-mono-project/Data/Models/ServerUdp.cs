@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +13,12 @@ namespace CSNT.Clientserverchat.Data.Models
         private readonly List<IPEndPoint> _clientsIpEndPoints = new(2);
 
         public override event Action<byte[]> MessageReceived;
+
+        public ServerUdp()
+        {
+            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        }
 
         public override void Start(IPAddress ipAddress, int port)
         {

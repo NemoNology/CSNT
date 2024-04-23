@@ -15,6 +15,7 @@ namespace CSNT.Clientserverchat.Data.Models
         public ServerTcp()
         {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         }
 
         public override event Action<byte[]> MessageReceived;
