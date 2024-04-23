@@ -29,7 +29,7 @@ namespace CSNT.Clientserverchat.Data.Controllers
         private void OnRunServerButtonPressed()
         {
             ushort port;
-            int protocolType = ProtocolInput.Selected;
+            bool isUdp = ProtocolInput.Selected == 0;
             if (!IPAddress.TryParse(IpAddressInput.Text, out IPAddress ipAddress))
             {
                 ErrorsOutput.Text = "Неверный IP-адрес";
@@ -40,14 +40,15 @@ namespace CSNT.Clientserverchat.Data.Controllers
                 ErrorsOutput.Text = "Неверный порт";
                 return;
             }
-            else if (!NetHelper.IsAddressForTransportProtocolAvailable(new IPEndPoint(ipAddress, port), protocolType == 0))
+            else if (!NetHelper.IsAddressForTransportProtocolAvailable(new IPEndPoint(ipAddress, port), isUdp))
             {
                 ErrorsOutput.Text = "Данный порт занят";
                 return;
             }
 
-            _server = protocolType == 0 ? new ServerUdp() : new ServerTcp();
-            _server.MessageReceived += AddMessage;
+            ErrorsOutput.Text = string.Empty;
+            _server = isUdp ? new ServerUdp() : new ServerTcp();
+            _server.MessageReceived += OnMessageRecieved;
 
             _server.Start(ipAddress, port);
             ServerRunningControl.Visible = true;
@@ -57,14 +58,14 @@ namespace CSNT.Clientserverchat.Data.Controllers
         private void OnStopServerButtonPressed()
         {
             _server.Stop();
-            _server.MessageReceived -= AddMessage;
+            _server.MessageReceived -= OnMessageRecieved;
             foreach (Node child in MessagesContainer.GetChildren())
                 MessagesContainer.RemoveChild(child);
             ServerRunningControl.Visible = false;
             ServerNotRunningControl.Visible = true;
         }
 
-        private void AddMessage(byte[] messageBytes)
+        private void OnMessageRecieved(byte[] messageBytes)
         {
             MessagesContainer.AddChild(new Label { Text = Encoding.UTF8.GetString(messageBytes) });
         }
