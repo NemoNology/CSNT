@@ -10,8 +10,9 @@ config_version=5
 
 [application]
 
-config/name="CSNT. Client server chat"
-config/features=PackedStringArray("4.2", "GL Compatibility")
+config/name="Клиент-серверный чат"
+run/main_scene="res://Data/Views/main.tscn"
+config/features=PackedStringArray("4.2", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [dotnet]
