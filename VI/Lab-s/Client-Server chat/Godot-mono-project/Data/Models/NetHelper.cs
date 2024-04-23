@@ -5,13 +5,14 @@ namespace CSNT.Clientserverchat.Data.Models
 {
     public class NetHelper
     {
-        public static bool IsPortForTransportProtocolAvailable(int port, bool isUdp)
+        public static bool IsAddressForTransportProtocolAvailable(IPEndPoint endPoint, bool isUdp)
         {
             var props = IPGlobalProperties.GetIPGlobalProperties();
-            foreach (IPEndPoint endPoint in isUdp ?
+            foreach (IPEndPoint listenerEndPoint in isUdp ?
                 props.GetActiveUdpListeners() : props.GetActiveTcpListeners())
             {
-                if (endPoint.Port == port)
+                if (listenerEndPoint.Address == endPoint.Address
+                    && listenerEndPoint.Port == endPoint.Port)
                     return false;
             }
             return true;
