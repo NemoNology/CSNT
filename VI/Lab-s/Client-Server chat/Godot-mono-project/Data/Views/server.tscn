@@ -1,0 +1,112 @@
+[gd_scene load_steps=2 format=3 uid="uid://ctdxlbgxvth5m"]
+
+[ext_resource type="Script" path="res://Data/Controllers/ServerViewController.cs" id="1_u2i0v"]
+
+[node name="Server" type="Control" node_paths=PackedStringArray("ServerNotRunningControl", "ServerRunningControl", "IpAddressInput", "PortInput", "ProtocolInput", "ErrorsOutput", "MessagesContainer")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_u2i0v")
+ServerNotRunningControl = NodePath("MarginContainer/Server not running control")
+ServerRunningControl = NodePath("MarginContainer/Server running control")
+IpAddressInput = NodePath("MarginContainer/Server not running control/GridContainer/LineEdit IPv4")
+PortInput = NodePath("MarginContainer/Server not running control/GridContainer/LineEdit port")
+ProtocolInput = NodePath("MarginContainer/Server not running control/GridContainer/OptionButton protocol")
+ErrorsOutput = NodePath("MarginContainer/Server not running control/Label error")
+MessagesContainer = NodePath("MarginContainer/Server running control/ScrollContainer/VBoxContainer messages")
+metadata/_edit_horizontal_guides_ = [-109.0]
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="Server not running control" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="GridContainer" type="GridContainer" parent="MarginContainer/Server not running control"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+columns = 2
+
+[node name="Label" type="Label" parent="MarginContainer/Server not running control/GridContainer"]
+layout_mode = 2
+text = "IPv4 адрес"
+horizontal_alignment = 2
+
+[node name="LineEdit IPv4" type="LineEdit" parent="MarginContainer/Server not running control/GridContainer"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "127.0.0.1"
+placeholder_text = "127.0.0.1"
+max_length = 15
+structured_text_bidi_override = 6
+
+[node name="Label2" type="Label" parent="MarginContainer/Server not running control/GridContainer"]
+layout_mode = 2
+text = "Порт"
+horizontal_alignment = 2
+
+[node name="LineEdit port" type="LineEdit" parent="MarginContainer/Server not running control/GridContainer"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+text = "40072"
+placeholder_text = "40072"
+
+[node name="Label3" type="Label" parent="MarginContainer/Server not running control/GridContainer"]
+layout_mode = 2
+text = "Протокол"
+horizontal_alignment = 2
+
+[node name="OptionButton protocol" type="OptionButton" parent="MarginContainer/Server not running control/GridContainer"]
+layout_mode = 2
+item_count = 2
+popup/item_0/text = "UDP"
+popup/item_0/id = 0
+popup/item_1/text = "TCP"
+popup/item_1/id = 1
+
+[node name="Label error" type="Label" parent="MarginContainer/Server not running control"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Button" type="Button" parent="MarginContainer/Server not running control"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "Запустить сервер"
+
+[node name="Server running control" type="VBoxContainer" parent="MarginContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/Server running control"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer messages" type="VBoxContainer" parent="MarginContainer/Server running control/ScrollContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Button" type="Button" parent="MarginContainer/Server running control"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "Остановить сервер"
+
+[connection signal="pressed" from="MarginContainer/Server not running control/Button" to="." method="OnRunServerButtonPressed"]
+[connection signal="pressed" from="MarginContainer/Server running control/Button" to="." method="OnStopServerButtonPressed"]
