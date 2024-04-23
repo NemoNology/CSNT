@@ -34,9 +34,9 @@ namespace CSNT.Clientserverchat.Data.Controllers
         private void OnConnectButtonPressed()
         {
             ushort clientPort, serverPort;
-            IPAddress clientIpAddress, serverIpAddress;
+            IPAddress serverIpAddress;
             bool isUdp = ProtocolInput.Selected == 0;
-            if (!IPAddress.TryParse(ClientIpInput.Text, out clientIpAddress))
+            if (!IPAddress.TryParse(ClientIpInput.Text, out IPAddress clientIpAddress))
             {
                 ErrorsOutput.Text = "Неверный IP-адрес клиента";
                 return;
@@ -61,9 +61,9 @@ namespace CSNT.Clientserverchat.Data.Controllers
                 ErrorsOutput.Text = "Данный порт для клиента занят";
                 return;
             }
-            else if (!NetHelper.IsAddressForTransportProtocolAvailable(new IPEndPoint(serverIpAddress, serverPort), isUdp))
+            else if (!NetHelper.IsThereActiveListenerWithSpecifiedAddress(new IPEndPoint(serverIpAddress, serverPort), isUdp))
             {
-                ErrorsOutput.Text = "Не найден сервер с введённым адресом (IP + порт)";
+                ErrorsOutput.Text = "Не найден сервер с введёнными данными";
                 return;
             }
 
@@ -80,10 +80,15 @@ namespace CSNT.Clientserverchat.Data.Controllers
         {
             _client.Dissconnect();
             _client.MessageReceived -= OnMessageRecieved;
-            foreach (Node child in MessagesContainer.GetChildren())
-                MessagesContainer.RemoveChild(child);
+            CallDeferred(nameof(ClearMessages));
             ClientDisconnectedControl.Visible = true;
             ClientConnectedControl.Visible = false;
+        }
+
+        private void ClearMessages()
+        {
+            foreach (Node child in MessagesContainer.GetChildren())
+                MessagesContainer.RemoveChild(child);
         }
 
         private void OnSendMessageButtonPressed()
@@ -93,7 +98,17 @@ namespace CSNT.Clientserverchat.Data.Controllers
 
         private void OnMessageRecieved(byte[] messageBytes)
         {
+            CallDeferred(nameof(AddMessageAsChild), messageBytes);
+        }
+
+        private void AddMessageAsChild(byte[] messageBytes)
+        {
             MessagesContainer.AddChild(new Label { Text = Encoding.UTF8.GetString(messageBytes) });
+        }
+
+        ~ClientViewController()
+        {
+            _client?.Dissconnect();
         }
     }
 }
