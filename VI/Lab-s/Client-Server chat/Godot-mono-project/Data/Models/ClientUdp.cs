@@ -18,7 +18,7 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public override void Connect(IPAddress clientIpAddress, int clientPort, IPAddress serverIpAddress, int serverPort)
         {
-            if (_isConnected)
+            if (_isConnected || _isDisposed)
                 return;
 
             _socket.Bind(new IPEndPoint(clientIpAddress, clientPort));
@@ -26,29 +26,34 @@ namespace CSNT.Clientserverchat.Data.Models
             _isConnected = true;
             Task.Run(() =>
             {
-                SendMessage(string.Empty);
+                SendMessage();
                 byte[] buffer = new byte[4096];
                 while (_isConnected)
                 {
                     var recievedBytesLength = _socket.Receive(buffer);
                     MessageReceived?.Invoke(buffer[..recievedBytesLength]);
+                    if (recievedBytesLength == 0)
+                    {
+                        Disconnect();
+                        return;
+                    }
                 }
             }, _cancellationTokenSource.Token);
         }
 
-        public override void Dissconnect()
+        public override void Disconnect()
         {
-            if (!_isConnected)
+            if (!_isConnected || _isDisposed)
                 return;
 
-            _socket.Disconnect(true);
+            SendMessage();
             _isConnected = false;
             _cancellationTokenSource.Cancel();
         }
 
-        public override void SendMessage(string message)
+        public override void SendMessage(string message = "")
         {
-            if (!_isConnected)
+            if (!_isConnected || _isDisposed)
                 return;
 
             _socket.Send(Encoding.UTF8.GetBytes(message));
