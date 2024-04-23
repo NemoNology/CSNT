@@ -40,11 +40,6 @@ namespace CSNT.Clientserverchat.Data.Controllers
                 ErrorsOutput.Text = "Неверный порт";
                 return;
             }
-            else if (protocolType < 0)
-            {
-                ErrorsOutput.Text = "Не выбран протокол";
-                return;
-            }
             else if (!NetHelper.IsAddressForTransportProtocolAvailable(new IPEndPoint(ipAddress, port), protocolType == 0))
             {
                 ErrorsOutput.Text = "Данный порт занят";
