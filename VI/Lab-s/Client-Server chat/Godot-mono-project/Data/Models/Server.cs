@@ -6,10 +6,11 @@ using System.Threading;
 
 namespace CSNT.Clientserverchat.Data.Models
 {
-    public abstract class Server
+    public abstract class Server : IDisposable
     {
         protected Socket _socket;
         protected bool _isRunning = false;
+        protected bool _isDisposed = false;
         protected readonly CancellationTokenSource _cancellationTokenSource = new();
         protected readonly List<byte[]> _messagesBytes = new(16);
 
@@ -19,5 +20,18 @@ namespace CSNT.Clientserverchat.Data.Models
         public abstract void Start(IPAddress ipAddress, int port);
 
         public abstract void Stop();
+
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            Stop();
+            _socket.Shutdown(SocketShutdown.Both);
+            _socket.Dispose();
+            _cancellationTokenSource.Dispose();
+            GC.SuppressFinalize(this);
+            _isDisposed = true;
+        }
     }
 }
