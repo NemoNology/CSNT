@@ -23,7 +23,7 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public override void Start(IPAddress ipAddress, int port)
         {
-            if (_isRunning)
+            if (_isRunning || _isDisposed)
                 return;
 
             _socket.Bind(new IPEndPoint(ipAddress, port));
@@ -40,9 +40,10 @@ namespace CSNT.Clientserverchat.Data.Models
                     EndPoint networkEndPoint = new IPEndPoint(IPAddress.Any, 0);
                     var reciedBytesLength = _socket.ReceiveFrom(buffer, ref networkEndPoint);
                     IPEndPoint clientIpEndPoint = SocketAddressToEndPoint(networkEndPoint.Serialize());
+                    bool isNewClient = !_clientsIpEndPoints.Contains(clientIpEndPoint);
 
                     // Check if it's new client
-                    if (!_clientsIpEndPoints.Contains(clientIpEndPoint))
+                    if (isNewClient)
                     {
                         // Send new client all messages
                         foreach (byte[] msg in _messagesBytes)
@@ -59,8 +60,24 @@ namespace CSNT.Clientserverchat.Data.Models
                         SendLastMessageToClients();
                     }
 
+                    // Empty message mean dissconectin or connection
+                    if (!isNewClient && reciedBytesLength == 0)
+                    {
+                        lock (_clientsIpEndPoints)
+                        {
+                            _clientsIpEndPoints.Remove(clientIpEndPoint);
+                        }
+                        lock (_messagesBytes)
+                        {
+                            _messagesBytes.Add(
+                                Encoding.UTF8.GetBytes(
+                                    $"{clientIpEndPoint} ({DateTime.Now}) отключился"));
+                        }
+
+                        SendLastMessageToClients();
+                    }
                     // Add new message if it's not empty
-                    if (reciedBytesLength > 0)
+                    else if (reciedBytesLength > 0)
                     {
                         lock (_messagesBytes)
                         {
@@ -69,37 +86,8 @@ namespace CSNT.Clientserverchat.Data.Models
                                 .Concat(buffer[..reciedBytesLength])
                                 .ToArray());
                         }
-                        // Send recieved message to every client
-                        SendLastMessageToClients();
-                    }
-                }
-            }, _cancellationTokenSource.Token);
-            // Thread for check clients disconnections
-            Task.Run(() =>
-            {
-                while (_isRunning)
-                {
-                    var activeListeners =
-                        IPGlobalProperties
-                        .GetIPGlobalProperties()
-                        .GetActiveUdpListeners();
 
-                    foreach (IPEndPoint endPoint in _clientsIpEndPoints)
-                    {
-                        if (!activeListeners.Contains(endPoint))
-                        {
-                            lock (_messagesBytes)
-                            {
-                                _messagesBytes.Add(
-                                    Encoding.UTF8.GetBytes(
-                                        $"{endPoint} ({DateTime.Now}) отключился"));
-                            }
-                            lock (_clientsIpEndPoints)
-                            {
-                                _clientsIpEndPoints.Remove(endPoint);
-                            }
-                            SendLastMessageToClients();
-                        }
+                        SendLastMessageToClients();
                     }
                 }
             }, _cancellationTokenSource.Token);
@@ -107,9 +95,11 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public override void Stop()
         {
-            if (!_isRunning)
+            if (!_isRunning || _isDisposed)
                 return;
 
+            _messagesBytes.Add(Array.Empty<byte>());
+            SendLastMessageToClients();
             _isRunning = false;
             lock (_messagesBytes)
             {
@@ -121,6 +111,9 @@ namespace CSNT.Clientserverchat.Data.Models
 
         private void SendLastMessageToClients()
         {
+            if (!_isRunning || _isDisposed)
+                return;
+
             MessageReceived?.Invoke(_messagesBytes[^1]);
             foreach (IPEndPoint endPoint in _clientsIpEndPoints)
                 _socket.SendTo(_messagesBytes[^1], endPoint);
