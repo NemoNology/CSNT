@@ -51,8 +51,7 @@ namespace CSNT.Clientserverchat.Data.Controllers
             _server.MessageReceived += OnMessageRecieved;
 
             _server.Start(ipAddress, port);
-            ServerRunningControl.Visible = true;
-            ServerNotRunningControl.Visible = false;
+            CallDeferred(nameof(SwitchControlsVisibility));
         }
 
         private void OnStopServerButtonPressed()
@@ -60,8 +59,13 @@ namespace CSNT.Clientserverchat.Data.Controllers
             _server.Stop();
             _server.MessageReceived -= OnMessageRecieved;
             CallDeferred(nameof(ClearMessages));
-            ServerRunningControl.Visible = false;
-            ServerNotRunningControl.Visible = true;
+            CallDeferred(nameof(SwitchControlsVisibility));
+        }
+
+        private void SwitchControlsVisibility()
+        {
+            ServerRunningControl.Visible = !ServerRunningControl.Visible;
+            ServerNotRunningControl.Visible = !ServerNotRunningControl.Visible;
         }
 
         private void ClearMessages()
@@ -80,8 +84,9 @@ namespace CSNT.Clientserverchat.Data.Controllers
             MessagesContainer.AddChild(new Label { Text = Encoding.UTF8.GetString(messageBytes) });
         }
 
-        ~ServerViewController()
+        public override void _ExitTree()
         {
+            base._ExitTree();
             _server?.Stop();
         }
     }
