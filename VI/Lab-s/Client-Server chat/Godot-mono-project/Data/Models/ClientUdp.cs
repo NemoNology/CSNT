@@ -26,6 +26,7 @@ namespace CSNT.Clientserverchat.Data.Models
             _isConnected = true;
             Task.Run(() =>
             {
+                SendMessage(string.Empty);
                 byte[] buffer = new byte[4096];
                 while (_isConnected)
                 {
