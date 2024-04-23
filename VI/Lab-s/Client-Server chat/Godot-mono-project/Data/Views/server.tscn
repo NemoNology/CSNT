@@ -74,6 +74,7 @@ horizontal_alignment = 2
 [node name="OptionButton protocol" type="OptionButton" parent="MarginContainer/Server not running control/GridContainer"]
 layout_mode = 2
 item_count = 2
+selected = 0
 popup/item_0/text = "UDP"
 popup/item_0/id = 0
 popup/item_1/text = "TCP"
