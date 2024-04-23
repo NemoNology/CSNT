@@ -53,7 +53,7 @@ namespace CSNT.Clientserverchat.Data.Models
                         {
                             _messagesBytes.Add(
                                 Encoding.UTF8.GetBytes(
-                                    $"{clientIpEndPoint} ({DateTime.Now} подключился)"));
+                                    $"{clientIpEndPoint} ({DateTime.Now}) подключился"));
                         }
                         // Notify clients about new client connection
                         SendLastMessageToClients();
@@ -92,7 +92,7 @@ namespace CSNT.Clientserverchat.Data.Models
                             {
                                 _messagesBytes.Add(
                                     Encoding.UTF8.GetBytes(
-                                        $"{endPoint} ({DateTime.Now} отключился)"));
+                                        $"{endPoint} ({DateTime.Now}) отключился"));
                             }
                             lock (_clientsIpEndPoints)
                             {
