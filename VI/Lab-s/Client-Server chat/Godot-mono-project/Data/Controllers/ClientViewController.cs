@@ -12,9 +12,9 @@ namespace CSNT.Clientserverchat.Data.Controllers
 
         [ExportCategory("Client view controller")]
         [Export]
-        public Control ServerNotRunningControl { get; set; }
+        public Control ClientDisconnectedControl { get; set; }
         [Export]
-        public Control ServerRunningControl { get; set; }
+        public Control ClientConnectedControl { get; set; }
         [Export]
         public LineEdit ClientIpInput { get; set; }
         [Export]
@@ -73,8 +73,8 @@ namespace CSNT.Clientserverchat.Data.Controllers
             _client.MessageReceived += OnMessageRecieved;
 
             _client.Connect(clientIpAddress, clientPort, serverIpAddress, serverPort);
-            ServerRunningControl.Visible = true;
-            ServerNotRunningControl.Visible = false;
+            ClientConnectedControl.Visible = true;
+            ClientDisconnectedControl.Visible = false;
         }
 
         private void OnDisconnectButtonPressed()
@@ -83,8 +83,8 @@ namespace CSNT.Clientserverchat.Data.Controllers
             _client.MessageReceived -= OnMessageRecieved;
             foreach (Node child in MessagesContainer.GetChildren())
                 MessagesContainer.RemoveChild(child);
-            ServerNotRunningControl.Visible = true;
-            ServerRunningControl.Visible = false;
+            ClientDisconnectedControl.Visible = true;
+            ClientConnectedControl.Visible = false;
         }
 
         private void OnSendMessageButtonPressed()
