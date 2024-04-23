@@ -1,12 +1,25 @@
-[gd_scene format=3 uid="uid://c0tkkn82w2kw3"]
+[gd_scene load_steps=2 format=3 uid="uid://c0tkkn82w2kw3"]
 
-[node name="Client" type="Control"]
+[ext_resource type="Script" path="res://Data/Controllers/ClientViewController.cs" id="1_rc4qg"]
+
+[node name="Client" type="Control" node_paths=PackedStringArray("ClientDisconnectedControl", "ClientConnectedControl", "ClientIpInput", "ClientPortInput", "ServerIpInput", "ServerPortInput", "ProtocolInput", "ErrorsOutput", "MessagesContainer", "MessageInput")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_rc4qg")
+ClientDisconnectedControl = NodePath("MarginContainer/VBoxContainer when disconnected")
+ClientConnectedControl = NodePath("MarginContainer/VBoxContainer when connected")
+ClientIpInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridContainer/LineEdit client IP")
+ClientPortInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridContainer/LineEdit client port")
+ServerIpInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridContainer/LineEdit server IP")
+ServerPortInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridContainer/LineEdit server port")
+ProtocolInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridContainer/OptionButton protocol")
+ErrorsOutput = NodePath("MarginContainer/VBoxContainer when disconnected/Label errors")
+MessagesContainer = NodePath("MarginContainer/VBoxContainer when connected/ScrollContainer/VBoxContainer messages")
+MessageInput = NodePath("MarginContainer/VBoxContainer when connected/HBoxContainer/LineEdit message")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -21,7 +34,6 @@ theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 
 [node name="VBoxContainer when disconnected" type="VBoxContainer" parent="MarginContainer"]
-visible = false
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
@@ -29,6 +41,8 @@ theme_override_constants/separation = 8
 
 [node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer when disconnected"]
 layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
 columns = 2
 
 [node name="Label" type="Label" parent="MarginContainer/VBoxContainer when disconnected/GridContainer"]
@@ -107,6 +121,7 @@ size_flags_horizontal = 4
 text = "Подключится к серверу"
 
 [node name="VBoxContainer when connected" type="VBoxContainer" parent="MarginContainer"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 16
 
@@ -114,14 +129,14 @@ theme_override_constants/separation = 16
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer when connected/ScrollContainer"]
+[node name="VBoxContainer messages" type="VBoxContainer" parent="MarginContainer/VBoxContainer when connected/ScrollContainer"]
 layout_mode = 2
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer when connected"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="LineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer when connected/HBoxContainer"]
+[node name="LineEdit message" type="LineEdit" parent="MarginContainer/VBoxContainer when connected/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "Пишите сообщение здесь"
@@ -135,3 +150,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 text = "Отключиться"
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer when disconnected/Button" to="." method="OnConnectButtonPressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer when connected/HBoxContainer/Button" to="." method="OnSendMessageButtonPressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer when connected/Button" to="." method="OnDisconnectButtonPressed"]
