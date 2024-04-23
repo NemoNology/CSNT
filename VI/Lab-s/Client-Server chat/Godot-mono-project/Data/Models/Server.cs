@@ -16,16 +16,6 @@ namespace CSNT.Clientserverchat.Data.Models
         public abstract event Action<byte[]> MessageReceived;
         public bool IsRunning => _isRunning;
 
-        ~Server()
-        {
-            Stop();
-            _cancellationTokenSource.Dispose();
-            if (_socket is null)
-                return;
-            _socket.Shutdown(SocketShutdown.Both);
-            _socket.Dispose();
-        }
-
         public abstract void Start(IPAddress ipAddress, int port);
 
         public abstract void Stop();
