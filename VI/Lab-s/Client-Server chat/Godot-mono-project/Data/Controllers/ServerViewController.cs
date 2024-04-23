@@ -59,15 +59,30 @@ namespace CSNT.Clientserverchat.Data.Controllers
         {
             _server.Stop();
             _server.MessageReceived -= OnMessageRecieved;
-            foreach (Node child in MessagesContainer.GetChildren())
-                MessagesContainer.RemoveChild(child);
+            CallDeferred(nameof(ClearMessages));
             ServerRunningControl.Visible = false;
             ServerNotRunningControl.Visible = true;
         }
 
+        private void ClearMessages()
+        {
+            foreach (Node child in MessagesContainer.GetChildren())
+                MessagesContainer.RemoveChild(child);
+        }
+
         private void OnMessageRecieved(byte[] messageBytes)
         {
+            CallDeferred(nameof(AddMessageAsChild), messageBytes);
+        }
+
+        private void AddMessageAsChild(byte[] messageBytes)
+        {
             MessagesContainer.AddChild(new Label { Text = Encoding.UTF8.GetString(messageBytes) });
+        }
+
+        ~ServerViewController()
+        {
+            _server?.Stop();
         }
     }
 }
