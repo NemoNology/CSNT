@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -47,17 +48,58 @@ namespace CSNT.Clientserverchat.Data.Models
                             _socket.SendTo(msg, networkEndPoint);
                         // Add new client
                         _clientsIpEndPoints.Add(clientIpEndPoint);
+                        lock (_messagesBytes)
+                        {
+                            _messagesBytes.Add(
+                                Encoding.UTF8.GetBytes(
+                                    $"{clientIpEndPoint} ({DateTime.Now} подключился)"));
+                        }
+                        SendLastMessageToClients();
                     }
-                    // Add new message
-                    lock (_messagesBytes)
+
+                    // Add new message if it's not empty
+                    if (reciedBytesLength > 0)
                     {
-                        _messagesBytes.Add(Encoding.UTF8.GetBytes(
-                            $"{networkEndPoint.Serialize()} ({DateTime.Now}): ")
-                            .Concat(buffer[..reciedBytesLength])
-                            .ToArray());
+                        lock (_messagesBytes)
+                        {
+                            _messagesBytes.Add(Encoding.UTF8.GetBytes(
+                                $"{clientIpEndPoint} ({DateTime.Now}): ")
+                                .Concat(buffer[..reciedBytesLength])
+                                .ToArray());
+                        }
                     }
+
                     // Send last message to every client
                     SendLastMessageToClients();
+                }
+            }, _cancellationTokenSource.Token);
+            // Thread for check clients disconnections
+            Task.Run(() =>
+            {
+                while (_isRunning)
+                {
+                    var activeListeners =
+                        IPGlobalProperties
+                        .GetIPGlobalProperties()
+                        .GetActiveUdpListeners();
+
+                    foreach (IPEndPoint endPoint in _clientsIpEndPoints)
+                    {
+                        if (!activeListeners.Contains(endPoint))
+                        {
+                            lock (_messagesBytes)
+                            {
+                                _messagesBytes.Add(
+                                    Encoding.UTF8.GetBytes(
+                                        $"{endPoint} ({DateTime.Now} отключился)"));
+                            }
+                            lock (_clientsIpEndPoints)
+                            {
+                                _clientsIpEndPoints.Remove(endPoint);
+                            }
+                            SendLastMessageToClients();
+                        }
+                    }
                 }
             }, _cancellationTokenSource.Token);
         }
@@ -88,7 +130,7 @@ namespace CSNT.Clientserverchat.Data.Models
             // Two bytes after are port
             // Four bytes after port are ip address
             return new IPEndPoint(
-                0 << 32 | socketAddress[4] << 24 | socketAddress[5] << 16 | socketAddress[6] << 8 | socketAddress[7],
+                0 << 32 | socketAddress[7] << 24 | socketAddress[6] << 16 | socketAddress[5] << 8 | socketAddress[4],
                 0 << 16 | socketAddress[2] << 8 | socketAddress[3]);
         }
     }
