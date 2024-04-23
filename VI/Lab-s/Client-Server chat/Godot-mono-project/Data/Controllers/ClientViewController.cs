@@ -72,17 +72,21 @@ namespace CSNT.Clientserverchat.Data.Controllers
             _client.MessageReceived += OnMessageRecieved;
 
             _client.Connect(clientIpAddress, clientPort, serverIpAddress, serverPort);
-            ClientConnectedControl.Visible = true;
-            ClientDisconnectedControl.Visible = false;
+            CallDeferred(nameof(SwitchControlsVisibility));
         }
 
         private void OnDisconnectButtonPressed()
         {
-            _client.Dissconnect();
+            _client.Disconnect();
             _client.MessageReceived -= OnMessageRecieved;
             CallDeferred(nameof(ClearMessages));
-            ClientDisconnectedControl.Visible = true;
-            ClientConnectedControl.Visible = false;
+            CallDeferred(nameof(SwitchControlsVisibility));
+        }
+
+        private void SwitchControlsVisibility()
+        {
+            ClientConnectedControl.Visible = !ClientConnectedControl.Visible;
+            ClientDisconnectedControl.Visible = !ClientDisconnectedControl.Visible;
         }
 
         private void ClearMessages()
@@ -93,11 +97,20 @@ namespace CSNT.Clientserverchat.Data.Controllers
 
         private void OnSendMessageButtonPressed()
         {
+            if (string.IsNullOrWhiteSpace(MessageInput.Text))
+                return;
+
             _client.SendMessage(MessageInput.Text);
+            MessageInput.Text = string.Empty;
         }
 
         private void OnMessageRecieved(byte[] messageBytes)
         {
+            if (messageBytes.Length == 0)
+            {
+                OnDisconnectButtonPressed();
+                return;
+            }
             CallDeferred(nameof(AddMessageAsChild), messageBytes);
         }
 
@@ -106,9 +119,10 @@ namespace CSNT.Clientserverchat.Data.Controllers
             MessagesContainer.AddChild(new Label { Text = Encoding.UTF8.GetString(messageBytes) });
         }
 
-        ~ClientViewController()
+        public override void _ExitTree()
         {
-            _client?.Dissconnect();
+            base._ExitTree();
+            _client?.Disconnect();
         }
     }
 }
