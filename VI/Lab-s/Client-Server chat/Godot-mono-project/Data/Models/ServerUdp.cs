@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,8 +27,8 @@ namespace CSNT.Clientserverchat.Data.Models
 
             _socket.Bind(new IPEndPoint(ipAddress, port));
             _isRunning = true;
-            _messagesBytes.Add(Encoding.UTF8.GetBytes($"Сервер ({_socket.LocalEndPoint}) ({DateTime.Now}) запущен"));
             // Add init massage to messages
+            _messagesBytes.Add(Encoding.UTF8.GetBytes($"Сервер ({_socket.LocalEndPoint}) ({DateTime.Now}) запущен"));
             SendLastMessageToClients();
             // Thread for receiving messages
             Task.Run(() =>

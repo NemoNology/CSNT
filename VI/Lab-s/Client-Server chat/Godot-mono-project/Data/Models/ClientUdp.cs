@@ -24,6 +24,7 @@ namespace CSNT.Clientserverchat.Data.Models
             _socket.Bind(new IPEndPoint(clientIpAddress, clientPort));
             _socket.Connect(new IPEndPoint(serverIpAddress, serverPort));
             _isConnected = true;
+            // Thread for recieving messages
             Task.Run(() =>
             {
                 SendMessage();
@@ -32,6 +33,7 @@ namespace CSNT.Clientserverchat.Data.Models
                 {
                     var recievedBytesLength = _socket.Receive(buffer);
                     MessageReceived?.Invoke(buffer[..recievedBytesLength]);
+                    // If message is empty - server clising, so we need to disconnect
                     if (recievedBytesLength == 0)
                     {
                         Disconnect();
