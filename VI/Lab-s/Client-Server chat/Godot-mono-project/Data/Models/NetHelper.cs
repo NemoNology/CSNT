@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 
@@ -8,9 +7,15 @@ namespace CSNT.Clientserverchat.Data.Models
     {
         public static bool IsAddressForTransportProtocolAvailable(IPEndPoint endPoint, bool isUdp)
         {
-            var props = IPGlobalProperties.GetIPGlobalProperties();
-            foreach (IPEndPoint listenerEndPoint in isUdp ?
-                props.GetActiveUdpListeners() : props.GetActiveTcpListeners())
+            foreach (IPEndPoint listenerEndPoint in
+                isUdp ?
+                IPGlobalProperties
+                .GetIPGlobalProperties()
+                .GetActiveUdpListeners()
+                :
+                IPGlobalProperties
+                .GetIPGlobalProperties()
+                .GetActiveTcpListeners())
             {
                 if (listenerEndPoint.Port == endPoint.Port
                     && listenerEndPoint.Address.Equals(endPoint.Address))
@@ -21,9 +26,15 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public static bool IsThereActiveListenerWithSpecifiedAddress(IPEndPoint endPoint, bool isUdp)
         {
-            var props = IPGlobalProperties.GetIPGlobalProperties();
-            foreach (IPEndPoint listenerEndPoint in isUdp ?
-                props.GetActiveUdpListeners() : props.GetActiveTcpListeners())
+            foreach (IPEndPoint listenerEndPoint in
+                isUdp ?
+                IPGlobalProperties
+                .GetIPGlobalProperties()
+                .GetActiveUdpListeners()
+                :
+                IPGlobalProperties
+                .GetIPGlobalProperties()
+                .GetActiveTcpListeners())
             {
                 if (listenerEndPoint.Port == endPoint.Port
                     && listenerEndPoint.Address.Equals(endPoint.Address))
