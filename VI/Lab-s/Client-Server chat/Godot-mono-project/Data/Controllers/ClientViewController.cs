@@ -1,5 +1,7 @@
 using CSNT.Clientserverchat.Data.Models;
 using Godot;
+using System;
+using System.Linq;
 using System.Net;
 using System.Text;
 
@@ -38,41 +40,48 @@ namespace CSNT.Clientserverchat.Data.Controllers
             bool isUdp = ProtocolInput.Selected == 0;
             if (!IPAddress.TryParse(ClientIpInput.Text, out IPAddress clientIpAddress))
             {
-                ErrorsOutput.Text = "Неверный IP-адрес клиента";
+                CallDeferred(nameof(PrintErrorMessage), "Неверный IP-адрес клиента");
                 return;
             }
             else if (!ushort.TryParse(ClientPortInput.Text, out clientPort))
             {
-                ErrorsOutput.Text = "Неверный порт клиента";
+                CallDeferred(nameof(PrintErrorMessage), "Неверный порт клиента");
                 return;
             }
             else if (!IPAddress.TryParse(ServerIpInput.Text, out serverIpAddress))
             {
-                ErrorsOutput.Text = "Неверный IP-адрес сервера";
+                CallDeferred(nameof(PrintErrorMessage), "Неверный IP-адрес сервера");
                 return;
             }
             else if (!ushort.TryParse(ServerPortInput.Text, out serverPort))
             {
-                ErrorsOutput.Text = "Неверный порт сервера";
+                CallDeferred(nameof(PrintErrorMessage), "Неверный порт сервера");
                 return;
             }
             else if (!NetHelper.IsAddressForTransportProtocolAvailable(new IPEndPoint(clientIpAddress, clientPort), isUdp))
             {
-                ErrorsOutput.Text = "Данный порт для клиента занят";
+                CallDeferred(nameof(PrintErrorMessage), "Данный адрес для клиента занят");
                 return;
             }
             else if (!NetHelper.IsThereActiveListenerWithSpecifiedAddress(new IPEndPoint(serverIpAddress, serverPort), isUdp))
             {
-                ErrorsOutput.Text = "Не найден сервер с введёнными данными";
+                CallDeferred(nameof(PrintErrorMessage), "Не найден слушатель (сервер) с введёнными данными");
                 return;
             }
 
-            ErrorsOutput.Text = string.Empty;
+            CallDeferred(nameof(PrintErrorMessage), "");
             _client = isUdp ? new ClientUdp() : new ClientTcp();
             _client.MessageReceived += OnMessageRecieved;
 
-            _client.Connect(clientIpAddress, clientPort, serverIpAddress, serverPort);
-            CallDeferred(nameof(SwitchControlsVisibility));
+            try
+            {
+                _client.Connect(clientIpAddress, clientPort, serverIpAddress, serverPort);
+                CallDeferred(nameof(SwitchControlsVisibility));
+            }
+            catch (Exception e)
+            {
+                CallDeferred(nameof(PrintErrorMessage), "Не удалось подключиться:\n" + e.Message);
+            }
         }
 
         private void OnDisconnectButtonPressed()
@@ -106,12 +115,19 @@ namespace CSNT.Clientserverchat.Data.Controllers
 
         private void OnMessageRecieved(byte[] messageBytes)
         {
-            if (messageBytes.Length == 0)
+            if (messageBytes.Length == 0
+                || Enumerable.SequenceEqual(messageBytes, ServerTcp.CloseMessageBytes))
             {
                 OnDisconnectButtonPressed();
+                CallDeferred(nameof(PrintErrorMessage), "Сервер был остановлен");
                 return;
             }
             CallDeferred(nameof(AddMessageAsChild), messageBytes);
+        }
+
+        private void PrintErrorMessage(string message)
+        {
+            ErrorsOutput.Text = message;
         }
 
         private void AddMessageAsChild(byte[] messageBytes)
