@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Text;
 using CSNT.Clientserverchat.Data.Models;
@@ -32,26 +33,33 @@ namespace CSNT.Clientserverchat.Data.Controllers
             bool isUdp = ProtocolInput.Selected == 0;
             if (!IPAddress.TryParse(IpAddressInput.Text, out IPAddress ipAddress))
             {
-                ErrorsOutput.Text = "Неверный IP-адрес";
+                CallDeferred(nameof(PrintErrorMessage), "Неверный IP-адрес");
                 return;
             }
             else if (!ushort.TryParse(PortInput.Text, out port))
             {
-                ErrorsOutput.Text = "Неверный порт";
+                CallDeferred(nameof(PrintErrorMessage), "Неверный порт");
                 return;
             }
             else if (!NetHelper.IsAddressForTransportProtocolAvailable(new IPEndPoint(ipAddress, port), isUdp))
             {
-                ErrorsOutput.Text = "Данный порт занят";
+                CallDeferred(nameof(PrintErrorMessage), "Данный адрес занят");
                 return;
             }
 
-            ErrorsOutput.Text = string.Empty;
+            CallDeferred(nameof(PrintErrorMessage), "");
             _server = isUdp ? new ServerUdp() : new ServerTcp();
             _server.MessageReceived += OnMessageRecieved;
 
-            _server.Start(ipAddress, port);
-            CallDeferred(nameof(SwitchControlsVisibility));
+            try
+            {
+                _server.Start(ipAddress, port);
+                CallDeferred(nameof(SwitchControlsVisibility));
+            }
+            catch (Exception e)
+            {
+                CallDeferred(nameof(PrintErrorMessage), "Не удалось запустить сервер:\n" + e.Message);
+            }
         }
 
         private void OnStopServerButtonPressed()
@@ -82,6 +90,11 @@ namespace CSNT.Clientserverchat.Data.Controllers
         private void AddMessageAsChild(byte[] messageBytes)
         {
             MessagesContainer.AddChild(new Label { Text = Encoding.UTF8.GetString(messageBytes) });
+        }
+
+        private void PrintErrorMessage(string message)
+        {
+            ErrorsOutput.Text = message;
         }
 
         public override void _ExitTree()
