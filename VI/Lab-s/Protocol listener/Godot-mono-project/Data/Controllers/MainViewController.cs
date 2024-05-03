@@ -1,7 +1,7 @@
 using System.Net;
 using Godot;
-using LacpSniffer.Models;
-namespace LacpSniffer.Controllers;
+using LacpSniffer.Data.Models;
+namespace LacpSniffer.Data.Controllers;
 
 public partial class MainViewController : Control
 {

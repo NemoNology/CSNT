@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 #nullable enable
-namespace LacpSniffer.Models;
+namespace LacpSniffer.Data.Models;
 
 public partial class SnifferController : Node
 {
