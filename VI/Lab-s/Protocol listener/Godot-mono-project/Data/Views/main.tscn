@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Data/Controllers/MainViewController.cs" id="1_gwvdx"]
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" node_paths=PackedStringArray("IpAddressInput", "PortInput", "ErrorsOutput")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,6 +10,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_gwvdx")
+IpAddressInput = NodePath("MarginContainer/VBoxContainer/GridContainer/LineEdit ip")
+PortInput = NodePath("MarginContainer/VBoxContainer/GridContainer/LineEdit2 port")
+ErrorsOutput = NodePath("MarginContainer/VBoxContainer/Label errors")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -68,3 +71,5 @@ autowrap_mode = 3
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Начать слушать на данном адресе"
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/Button start sniffering" to="." method="OnStartSnifferingButtonPressed"]
