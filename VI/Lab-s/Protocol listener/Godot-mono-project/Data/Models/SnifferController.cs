@@ -22,12 +22,13 @@ public partial class SnifferController : Node
         set => _ipEndPoint = value;
     }
 
-    public SnifferController()
+    public override void _Ready()
     {
         _socket = new(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.IP);
         _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
         _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.HeaderIncluded, true);
         _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        base._Ready();
     }
 
     public static bool IsAddressBusy(IPAddress address, int port)
