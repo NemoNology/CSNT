@@ -30,7 +30,7 @@ public partial class MainViewController : Control
         }
 
         ErrorsOutput.Text = "";
-        SnifferController.IpEndPoint = new(address, port);
+        SnifferController.IPEndPoint = new(address, port);
 
         GetTree().ChangeSceneToFile("res://Data/Scenes/sniffering.tscn");
     }

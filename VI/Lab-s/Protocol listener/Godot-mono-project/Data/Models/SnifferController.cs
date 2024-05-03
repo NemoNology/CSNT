@@ -10,18 +10,24 @@ namespace LacpSniffer.Data.Models;
 
 public partial class SnifferController : Node
 {
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private static readonly CancellationTokenSource _cancellationTokenSource = new();
+    private static Socket _socket = null!;
+    private static IPEndPoint _ipEndPoint = null!;
 
     public static event Action<byte[]>? MessageReceived;
-    public static Socket Socket { get; private set; } = null!;
-    public static IPEndPoint IpEndPoint { get; set; } = null!;
+
+    public static IPEndPoint IPEndPoint
+    {
+        get => _ipEndPoint;
+        set => _ipEndPoint = value;
+    }
 
     public SnifferController()
     {
-        Socket = new(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.IP);
-        Socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
-        Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.HeaderIncluded, true);
-        Socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+        _socket = new(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.IP);
+        _socket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.PacketInformation, true);
+        _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.HeaderIncluded, true);
+        _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
     }
 
     public static bool IsAddressBusy(IPAddress address, int port)
@@ -35,16 +41,16 @@ public partial class SnifferController : Node
         return false;
     }
 
-    public async Task<bool> StartListenningAsync(int port)
+    public static async Task<bool> StartListenningAsync(int port = 0)
     {
         try
         {
-            Socket.Bind(new IPEndPoint(IPAddress.Any, port));
-            Socket.Connect(IpEndPoint);
+            _socket.Bind(new IPEndPoint(IPAddress.Any, port));
+            _socket.Connect(_ipEndPoint);
             byte[] buffer = new byte[4096];
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
-                int receivedBytesLength = await Socket.ReceiveAsync(buffer, SocketFlags.None, _cancellationTokenSource.Token);
+                int receivedBytesLength = await _socket.ReceiveAsync(buffer, SocketFlags.None, _cancellationTokenSource.Token);
                 if (receivedBytesLength > 0)
                     MessageReceived?.Invoke(buffer[..receivedBytesLength]);
             }
@@ -57,7 +63,7 @@ public partial class SnifferController : Node
         return false;
     }
 
-    public void StopListenning()
+    public static void StopListenning()
     {
         _cancellationTokenSource.Cancel();
     }
