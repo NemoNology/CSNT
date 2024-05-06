@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -8,33 +9,35 @@ namespace CSNT.Clientserverchat.Data.Models
 {
     public class ClientUdp : Client
     {
+        private readonly UdpClient _client;
+
         public override event Action<byte[]> MessageReceived;
 
         public ClientUdp()
         {
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            _client = new(AddressFamily.InterNetwork);
         }
 
         public override void Connect(IPAddress clientIpAddress, int clientPort, IPAddress serverIpAddress, int serverPort)
         {
-            if (_isConnected || _isDisposed)
+            if (_isConnected)
                 return;
 
-            _socket.Bind(new IPEndPoint(clientIpAddress, clientPort));
-            _socket.Connect(new IPEndPoint(serverIpAddress, serverPort));
+            var serverEndpoint = new IPEndPoint(serverIpAddress, serverPort);
+            _client.Client.Bind(new IPEndPoint(clientIpAddress, clientPort));
+            _client.Connect(serverEndpoint);
             _isConnected = true;
             // Thread for recieving messages
             Task.Run(() =>
             {
+                // Send message to server which means that client connected
                 SendMessage();
-                byte[] buffer = new byte[4096];
                 while (_isConnected)
                 {
-                    var recievedBytesLength = _socket.Receive(buffer);
-                    MessageReceived?.Invoke(buffer[..recievedBytesLength]);
-                    // If message is empty - server clising, so we need to disconnect
-                    if (recievedBytesLength == 0)
+                    var buffer = _client.Receive(ref serverEndpoint);
+                    MessageReceived?.Invoke(buffer);
+                    // If special message recieved => server is closing, client needs to disconnect
+                    if (Enumerable.SequenceEqual(buffer, NetHelper.SpecialMessageBytes))
                     {
                         Disconnect();
                         return;
@@ -45,7 +48,7 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public override void Disconnect()
         {
-            if (!_isConnected || _isDisposed)
+            if (!_isConnected)
                 return;
 
             SendMessage();
@@ -55,10 +58,11 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public override void SendMessage(string message = "")
         {
-            if (!_isConnected || _isDisposed)
+            if (!_isConnected)
                 return;
 
-            _socket.Send(Encoding.UTF8.GetBytes(message));
+            _client.Send(
+                message == "" ? NetHelper.SpecialMessageBytes : Encoding.UTF8.GetBytes(message));
         }
     }
 }

@@ -10,35 +10,34 @@ namespace CSNT.Clientserverchat.Data.Models
 {
     public class ServerUdp : Server
     {
+        private readonly UdpClient _server;
         private readonly List<IPEndPoint> _clientsIpEndPoints = new(2);
 
         public override event Action<byte[]> MessageReceived;
 
         public ServerUdp()
         {
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            _server = new(AddressFamily.InterNetwork);
         }
 
         public override void Start(IPAddress ipAddress, int port)
         {
-            if (_isRunning || _isDisposed)
+            if (_isRunning)
                 return;
 
-            _socket.Bind(new IPEndPoint(ipAddress, port));
+            _server.Client.Bind(new IPEndPoint(ipAddress, port));
             _isRunning = true;
             // Add init massage to messages
-            _messagesBytes.Add(Encoding.UTF8.GetBytes($"Сервер ({_socket.LocalEndPoint}) ({DateTime.Now}) запущен"));
+            _messagesBytes.Add(Encoding.UTF8.GetBytes(
+                GetStartRunningMessage(_server.Client.LocalEndPoint)));
             SendLastMessageToClients();
             // Thread for receiving messages
             Task.Run(() =>
             {
-                byte[] buffer = new byte[4096];
                 while (_isRunning)
                 {
-                    EndPoint networkEndPoint = new IPEndPoint(IPAddress.Any, 0);
-                    var reciedBytesLength = _socket.ReceiveFrom(buffer, ref networkEndPoint);
-                    IPEndPoint clientIpEndPoint = SocketAddressToEndPoint(networkEndPoint.Serialize());
+                    IPEndPoint clientIpEndPoint = new(IPAddress.Any, 0);
+                    var buffer = _server.Receive(ref clientIpEndPoint);
                     bool isNewClient = !_clientsIpEndPoints.Contains(clientIpEndPoint);
 
                     // Check if it's new client
@@ -46,58 +45,48 @@ namespace CSNT.Clientserverchat.Data.Models
                     {
                         // Send new client all messages
                         foreach (byte[] msg in _messagesBytes)
-                            _socket.SendTo(msg, networkEndPoint);
+                            _server.Send(msg, clientIpEndPoint);
                         // Add new client
                         _clientsIpEndPoints.Add(clientIpEndPoint);
                         lock (_messagesBytes)
                         {
                             _messagesBytes.Add(
                                 Encoding.UTF8.GetBytes(
-                                    $"{clientIpEndPoint} ({DateTime.Now}) подключился"));
+                                    GetClientConnectedMessage(clientIpEndPoint)));
                         }
                         // Notify clients about new client connection
                         SendLastMessageToClients();
                     }
 
-                    // Empty message mean dissconectin or connection
-                    if (!isNewClient && reciedBytesLength == 0)
+                    lock (_messagesBytes)
                     {
-                        lock (_clientsIpEndPoints)
-                        {
-                            _clientsIpEndPoints.Remove(clientIpEndPoint);
-                        }
-                        lock (_messagesBytes)
-                        {
-                            _messagesBytes.Add(
-                                Encoding.UTF8.GetBytes(
-                                    $"{clientIpEndPoint} ({DateTime.Now}) отключился"));
-                        }
-
-                        SendLastMessageToClients();
-                    }
-                    // Add new message if it's not empty
-                    else if (reciedBytesLength > 0)
-                    {
-                        lock (_messagesBytes)
+                        if (!isNewClient && Enumerable.SequenceEqual(buffer, NetHelper.SpecialMessageBytes))
                         {
                             _messagesBytes.Add(Encoding.UTF8.GetBytes(
-                                $"{clientIpEndPoint} ({DateTime.Now}): ")
-                                .Concat(buffer[..reciedBytesLength])
-                                .ToArray());
-                        }
+                                GetClientDisconnectedMessage(clientIpEndPoint)));
 
-                        SendLastMessageToClients();
+                            // Remove disconnected client
+                            lock (_clientsIpEndPoints)
+                                _clientsIpEndPoints.Remove(clientIpEndPoint);
+                        }
+                        else
+                        {
+                            _messagesBytes.Add(
+                                GetClientFormattedMessageAsBytes(clientIpEndPoint, buffer));
+                        }
                     }
+
+                    SendLastMessageToClients();
                 }
             }, _cancellationTokenSource.Token);
         }
 
         public override void Stop()
         {
-            if (!_isRunning || _isDisposed)
+            if (!_isRunning)
                 return;
 
-            _messagesBytes.Add(Array.Empty<byte>());
+            _messagesBytes.Add(NetHelper.SpecialMessageBytes);
             SendLastMessageToClients();
             _isRunning = false;
             lock (_messagesBytes)
@@ -110,22 +99,13 @@ namespace CSNT.Clientserverchat.Data.Models
 
         private void SendLastMessageToClients()
         {
-            if (!_isRunning || _isDisposed)
+            if (!_isRunning)
                 return;
 
-            MessageReceived?.Invoke(_messagesBytes[^1]);
+            var lastMessage = _messagesBytes[^1];
+            MessageReceived?.Invoke(lastMessage);
             foreach (IPEndPoint endPoint in _clientsIpEndPoints)
-                _socket.SendTo(_messagesBytes[^1], endPoint);
-        }
-
-        private static IPEndPoint SocketAddressToEndPoint(SocketAddress socketAddress)
-        {
-            // First two bytes in socket address are address family
-            // Two bytes after are port
-            // Four bytes after port are ip address
-            return new IPEndPoint(
-                0 << 32 | socketAddress[7] << 24 | socketAddress[6] << 16 | socketAddress[5] << 8 | socketAddress[4],
-                0 << 16 | socketAddress[2] << 8 | socketAddress[3]);
+                _server.Send(lastMessage, endPoint);
         }
     }
 }
