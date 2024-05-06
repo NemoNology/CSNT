@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://ctdxlbgxvth5m"]
+[gd_scene load_steps=3 format=3 uid="uid://ctdxlbgxvth5m"]
 
 [ext_resource type="Script" path="res://Data/Controllers/ServerViewController.cs" id="1_u2i0v"]
+[ext_resource type="Script" path="res://Data/Controllers/IPLineEditWithAutoLocalIPGetting.gd" id="2_vclw3"]
 
 [node name="Server" type="Control" node_paths=PackedStringArray("ServerNotRunningControl", "ServerRunningControl", "IpAddressInput", "PortInput", "ProtocolInput", "ErrorsOutput", "MessagesContainer")]
 layout_mode = 3
@@ -54,6 +55,7 @@ text = "127.0.0.1"
 placeholder_text = "127.0.0.1"
 max_length = 15
 structured_text_bidi_override = 6
+script = ExtResource("2_vclw3")
 
 [node name="Label2" type="Label" parent="MarginContainer/Server not running control/GridContainer"]
 layout_mode = 2

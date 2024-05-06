@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://c0tkkn82w2kw3"]
+[gd_scene load_steps=3 format=3 uid="uid://c0tkkn82w2kw3"]
 
 [ext_resource type="Script" path="res://Data/Controllers/ClientViewController.cs" id="1_rc4qg"]
+[ext_resource type="Script" path="res://Data/Controllers/IPLineEditWithAutoLocalIPGetting.gd" id="2_lk3qo"]
 
 [node name="Client" type="Control" node_paths=PackedStringArray("ClientDisconnectedControl", "ClientConnectedControl", "ClientIpInput", "ClientPortInput", "ServerIpInput", "ServerPortInput", "ProtocolInput", "ErrorsOutput", "MessagesContainer", "MessageInput")]
 layout_mode = 3
@@ -57,6 +58,7 @@ text = "127.0.0.1"
 placeholder_text = "127.0.0.1"
 max_length = 15
 structured_text_bidi_override = 6
+script = ExtResource("2_lk3qo")
 
 [node name="Label3" type="Label" parent="MarginContainer/VBoxContainer when disconnected/GridContainer"]
 layout_mode = 2
@@ -83,6 +85,7 @@ text = "127.0.0.1"
 placeholder_text = "127.0.0.1"
 max_length = 15
 structured_text_bidi_override = 6
+script = ExtResource("2_lk3qo")
 
 [node name="Label4" type="Label" parent="MarginContainer/VBoxContainer when disconnected/GridContainer"]
 layout_mode = 2
