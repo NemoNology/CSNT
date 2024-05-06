@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
-using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace CSNT.Clientserverchat.Data.Models
 {
-    public abstract class Server : IDisposable
+    public abstract class Server
     {
-        protected Socket _socket;
         protected bool _isRunning = false;
-        protected bool _isDisposed = false;
         protected readonly CancellationTokenSource _cancellationTokenSource = new();
         protected readonly List<byte[]> _messagesBytes = new(16);
 
@@ -21,17 +20,16 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public abstract void Stop();
 
-        public void Dispose()
-        {
-            if (_isDisposed)
-                return;
+        public static string GetStartRunningMessage(EndPoint localEndPoint)
+            => $"Сервер ({localEndPoint}) ({DateTime.Now}) запущен";
 
-            Stop();
-            _socket.Shutdown(SocketShutdown.Both);
-            _socket.Dispose();
-            _cancellationTokenSource.Dispose();
-            GC.SuppressFinalize(this);
-            _isDisposed = true;
-        }
+        public static string GetClientConnectedMessage(EndPoint clientEndPoint)
+         => $"Клиент ({clientEndPoint}) ({DateTime.Now}) подключился";
+
+        public static string GetClientDisconnectedMessage(EndPoint clientEndPoint)
+        => $"Клиент ({clientEndPoint}) ({DateTime.Now}) отключился";
+
+        public static byte[] GetClientFormattedMessageAsBytes(EndPoint clientEndPoint, byte[] messageBytes)
+         => Encoding.UTF8.GetBytes($"{clientEndPoint} ({DateTime.Now}): ").Concat(messageBytes).ToArray();
     }
 }
