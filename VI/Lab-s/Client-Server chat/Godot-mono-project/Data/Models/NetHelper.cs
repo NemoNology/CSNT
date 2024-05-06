@@ -5,6 +5,8 @@ namespace CSNT.Clientserverchat.Data.Models
 {
     public class NetHelper
     {
+        public static readonly byte[] SpecialMessageBytes = { 1, 0, 1 };
+
         public static bool IsAddressForTransportProtocolAvailable(IPEndPoint endPoint, bool isUdp)
         {
             foreach (IPEndPoint listenerEndPoint in
