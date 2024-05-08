@@ -9,59 +9,72 @@ namespace CSNT.Clientserverchat.Data.Models
 {
     public class ClientUdp : Client
     {
-        private readonly UdpClient _client;
-
         public override event Action<byte[]> MessageReceived;
 
         public ClientUdp()
         {
-            _client = new(AddressFamily.InterNetwork);
+            _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         }
 
         public override void Connect(IPAddress clientIpAddress, int clientPort, IPAddress serverIpAddress, int serverPort)
         {
-            if (_isConnected)
+            if (_state != ClientState.Disconnected)
                 return;
 
-            var serverEndpoint = new IPEndPoint(serverIpAddress, serverPort);
-            _client.Client.Bind(new IPEndPoint(clientIpAddress, clientPort));
-            _client.Connect(serverEndpoint);
-            _isConnected = true;
+            _socket.Bind(new IPEndPoint(clientIpAddress, clientPort));
+            _socket.Connect(new IPEndPoint(serverIpAddress, serverPort));
+            State = ClientState.Connecting;
             // Thread for recieving messages
             Task.Run(() =>
             {
-                // Send message to server which means that client connected
+                byte[] buffer = new byte[4096];
+                // Send message to server which means that client started connecting
                 SendMessage();
-                while (_isConnected)
+                // Wait for server answer
+                while (_state == ClientState.Connecting)
                 {
-                    var buffer = _client.Receive(ref serverEndpoint);
-                    MessageReceived?.Invoke(buffer);
-                    // If special message recieved => server is closing, client needs to disconnect
-                    if (Enumerable.SequenceEqual(buffer, NetHelper.SpecialMessageBytes))
+                    if (_socket.Available > 0)
                     {
-                        Disconnect();
+                        State = ClientState.Connected;
+                        break;
+                    }
+                }
+                // If connected -> start listenning
+                while (_state == ClientState.Connected)
+                {
+                    int recievedBytesLength = _socket.Receive(buffer);
+                    byte[] recievedBytes = buffer[..recievedBytesLength];
+                    MessageReceived?.Invoke(recievedBytes);
+                    // If special message recieved => server is closing, client needs to disconnect
+                    if (Enumerable.SequenceEqual(recievedBytes, NetHelper.SpecialMessageBytes))
+                    {
+                        Disconnect(true);
                         return;
                     }
                 }
             }, _cancellationTokenSource.Token);
         }
 
-        public override void Disconnect()
+        public override async void Disconnect(bool isForced = false)
         {
-            if (!_isConnected)
+            if (_state != ClientState.Disconnected)
                 return;
 
-            SendMessage();
-            _isConnected = false;
+            if (!isForced)
+                SendMessage();
+            State = ClientState.Disconnected;
+            if (_socket.Connected)
+                await _socket.DisconnectAsync(true);
             _cancellationTokenSource.Cancel();
         }
 
         public override void SendMessage(string message = "")
         {
-            if (!_isConnected)
+            if (_state != ClientState.Disconnected)
                 return;
 
-            _client.Send(
+            _socket.Send(
                 message == "" ? NetHelper.SpecialMessageBytes : Encoding.UTF8.GetBytes(message));
         }
     }

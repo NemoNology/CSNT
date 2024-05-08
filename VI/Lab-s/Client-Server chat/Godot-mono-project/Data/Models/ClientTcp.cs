@@ -9,7 +9,6 @@ namespace CSNT.Clientserverchat.Data.Models
 {
     public class ClientTcp : Client
     {
-        // private Socket _connectedSocket;
         public override event Action<byte[]> MessageReceived;
 
         public ClientTcp()
@@ -20,53 +19,50 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public override void Connect(IPAddress clientIpAddress, int clientPort, IPAddress serverIpAddress, int serverPort)
         {
-            if (_isConnected)
+            if (_state != ClientState.Disconnected)
                 return;
 
             _socket.Bind(new IPEndPoint(clientIpAddress, clientPort));
+            // Connectiong to server
+            State = ClientState.Connecting;
             _socket.Connect(new IPEndPoint(serverIpAddress, serverPort));
-            _isConnected = true;
+            State = ClientState.Connected;
             // Thread for connection and recieving messages
-            Task.Run(async () =>
+            Task.Run(() =>
             {
                 byte[] buffer = new byte[4096];
-                // Start listening (Awaiting connection) and accept connection
-                // _socket.Listen(1);
-                // _connectedSocket = _socket.Accept();
                 // Start recieve messages
-                while (_isConnected)
+                while (_state == ClientState.Connected)
                 {
-                    // var recievedBytesLength = _connectedSocket.Receive(buffer);
-                    var recievedBytesLength = await _socket.ReceiveAsync(
-                        buffer, SocketFlags.None, _cancellationTokenSource.Token);
+                    int recievedBytesLength = _socket.Receive(buffer);
                     byte[] recievedBytes = buffer[..recievedBytesLength];
                     MessageReceived?.Invoke(recievedBytes);
-                    // If message is empty - server clising, so we need to disconnect
-                    if (Enumerable.SequenceEqual(recievedBytes, ServerTcp.CloseMessageBytes))
+                    // If message is special - server closing, so client needs to disconnect
+                    if (Enumerable.SequenceEqual(recievedBytes, NetHelper.SpecialMessageBytes))
                     {
-                        Disconnect();
+                        Disconnect(true);
                         return;
                     }
                 }
             }, _cancellationTokenSource.Token);
         }
 
-        public override async void Disconnect()
+        public override async void Disconnect(bool isForced = false)
         {
-            if (!_isConnected || _isDisposed)
+            if (_state == ClientState.Disconnected)
                 return;
 
-            _isConnected = false;
-            await _socket.DisconnectAsync(true);
+            State = ClientState.Disconnected;
+            if (_socket.Connected)
+                await _socket.DisconnectAsync(true);
             _cancellationTokenSource.Cancel();
         }
 
         public override void SendMessage(string message)
         {
-            if (!_isConnected || _isDisposed || !_socket.Connected)
+            if (_state != ClientState.Connected || !_socket.Connected)
                 return;
 
-            // _connectedSocket.Send(Encoding.UTF8.GetBytes(message));
             _socket.Send(Encoding.UTF8.GetBytes(message));
         }
     }
