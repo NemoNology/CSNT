@@ -14,8 +14,6 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public override event Action<byte[]> MessageReceived;
 
-        public static readonly byte[] CloseMessageBytes = new byte[] { 0 };
-
         public ServerTcp()
         {
             _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -24,46 +22,57 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public override void Start(IPAddress ipAddress, int port)
         {
-            if (_isRunning || _isDisposed)
+            if (_isRunning)
                 return;
 
-            _socket.Bind(new IPEndPoint(ipAddress, port));
-            _isRunning = true;
+            var serverEndPoint = new IPEndPoint(ipAddress, port);
+            _socket.Bind(serverEndPoint);
+            IsRunning = true;
             // Add init massage to messages
-            _messagesBytes.Add(Encoding.UTF8.GetBytes($"Сервер ({_socket.LocalEndPoint}) ({DateTime.Now}) запущен\n"));
+            _messagesBytes.Add(
+                Encoding.UTF8.GetBytes(GetInitializeMessage(serverEndPoint)));
             SendLastMessageToClients();
             // Thread for accepting connections and listening clients
             Task.Run(() =>
             {
                 while (_isRunning)
                 {
+                    // Start listening
                     _socket.Listen();
                     var clientSocket = _socket.Accept();
                     lock (_messagesBytes)
                     {
+                        // Send all messages for new client
                         foreach (byte[] msg in _messagesBytes)
                         {
                             clientSocket.Send(msg);
                         }
-                        _messagesBytes.Add(Encoding.UTF8.GetBytes($"{clientSocket.RemoteEndPoint} ({DateTime.Now}) подключился\n"));
+                        _messagesBytes.Add(
+                            Encoding.UTF8.GetBytes(
+                                GetClientConnectedMessage(clientSocket.RemoteEndPoint)
+                            ));
                     }
+
                     lock (_clientsSockets)
                     {
                         _clientsSockets.Add(clientSocket);
-                        SendLastMessageToClients();
                     }
 
+                    // Notify about new client
+                    SendLastMessageToClients();
+
                     // Start recieve messages from connected client in another thread
-                    Task.Run(async () =>
+                    Task.Run(() =>
                     {
                         byte[] buffer = new byte[2048];
                         int recievedBytesLength;
                         while (clientSocket.Connected)
                         {
-                            recievedBytesLength = await clientSocket.ReceiveAsync(buffer, SocketFlags.None, _cancellationTokenSource.Token);
+                            recievedBytesLength = clientSocket.Receive(buffer);
 
-                            // Empty message mean dissconectin or connection
-                            if (recievedBytesLength == 0)
+                            // Special message means dissconecting
+                            if (Enumerable.SequenceEqual(
+                                buffer[..recievedBytesLength], NetHelper.SpecialMessageBytes))
                             {
                                 lock (_clientsSockets)
                                     _clientsSockets.Remove(clientSocket);
@@ -71,23 +80,17 @@ namespace CSNT.Clientserverchat.Data.Models
                                 {
                                     _messagesBytes.Add(
                                         Encoding.UTF8.GetBytes(
-                                            $"{clientSocket.RemoteEndPoint} ({DateTime.Now}) отключился\n"));
+                                            GetClientDisconnectedMessage(clientSocket.RemoteEndPoint)));
                                 }
+                                // Notify clients about someone client disconnecting and end thread working 
                                 SendLastMessageToClients();
                                 return;
                             }
-                            // If message is not empty then just add it to messages
-                            else if (recievedBytesLength > 0)
+                            // If it's not special message then just add it to messages
+                            lock (_messagesBytes)
                             {
-                                lock (_messagesBytes)
-                                {
-                                    _messagesBytes.Add(
-                                        Encoding.UTF8.GetBytes(
-                                            $"{clientSocket.RemoteEndPoint} ({DateTime.Now}): ")
-                                            .Concat(buffer[..recievedBytesLength]
-                                            .Concat(Encoding.UTF8.GetBytes("\n")))
-                                            .ToArray());
-                                }
+                                _messagesBytes.Add(GetClientFormattedMessageAsBytes(
+                                    clientSocket.RemoteEndPoint, buffer[..recievedBytesLength]));
                             }
 
                             SendLastMessageToClients();
@@ -104,12 +107,12 @@ namespace CSNT.Clientserverchat.Data.Models
 
             lock (_messagesBytes)
             {
-                _messagesBytes.Add(CloseMessageBytes);
+                _messagesBytes.Add(NetHelper.SpecialMessageBytes);
                 SendLastMessageToClients();
                 _messagesBytes.Clear();
                 _messagesBytes.Capacity = 16;
             }
-            _isRunning = false;
+            IsRunning = false;
             lock (_clientsSockets)
             {
                 _clientsSockets.Clear();
@@ -120,7 +123,7 @@ namespace CSNT.Clientserverchat.Data.Models
 
         private void SendLastMessageToClients()
         {
-            if (!_isRunning || _isDisposed)
+            if (!_isRunning)
                 return;
 
             MessageReceived?.Invoke(_messagesBytes[^1]);
