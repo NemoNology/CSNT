@@ -22,7 +22,7 @@ namespace CSNT.Clientserverchat.Data.Models
 
         public abstract void Stop();
 
-        public static string GetStartRunningMessage(EndPoint localEndPoint)
+        public static string GetInitializeMessage(EndPoint localEndPoint)
             => $"Сервер ({localEndPoint}) ({DateTime.Now}) запущен";
 
         public static string GetClientConnectedMessage(EndPoint clientEndPoint)
