@@ -16,7 +16,22 @@ namespace CSNT.Clientserverchat.Data.Models
         protected readonly List<byte[]> _messagesBytes = new(16);
 
         public abstract event Action<byte[]> MessageReceived;
-        public bool IsRunning => _isRunning;
+        /// <summary>
+        /// <b>State</b>: <c>true</c> if server running, <c>false</c> - otherwise
+        /// </summary>
+        public event Action<bool> StateChanged;
+        /// <summary>
+        /// <c>true</c> if server running, <c>false</c> - otherwise
+        /// </summary>
+        public bool IsRunning
+        {
+            get => _isRunning;
+            set
+            {
+                _isRunning = value;
+                StateChanged?.Invoke(_isRunning);
+            }
+        }
 
         public abstract void Start(IPAddress ipAddress, int port);
 
