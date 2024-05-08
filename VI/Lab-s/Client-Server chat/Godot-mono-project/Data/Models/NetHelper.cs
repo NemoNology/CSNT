@@ -3,7 +3,7 @@ using System.Net.NetworkInformation;
 
 namespace CSNT.Clientserverchat.Data.Models
 {
-    public class NetHelper
+    public static class NetHelper
     {
         public static readonly byte[] SpecialMessageBytes = { 1, 0, 1 };
 
