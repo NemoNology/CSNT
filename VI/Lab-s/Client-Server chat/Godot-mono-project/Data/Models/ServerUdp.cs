@@ -10,14 +10,14 @@ namespace CSNT.Clientserverchat.Data.Models
 {
     public class ServerUdp : Server
     {
-        private readonly UdpClient _server;
-        private readonly List<IPEndPoint> _clientsIpEndPoints = new(2);
+        private readonly List<EndPoint> _clientsEndPoints = new(2);
 
         public override event Action<byte[]> MessageReceived;
 
         public ServerUdp()
         {
-            _server = new(AddressFamily.InterNetwork);
+            _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         }
 
         public override void Start(IPAddress ipAddress, int port)
@@ -25,34 +25,37 @@ namespace CSNT.Clientserverchat.Data.Models
             if (_isRunning)
                 return;
 
-            _server.Client.Bind(new IPEndPoint(ipAddress, port));
-            _isRunning = true;
+            _socket.Bind(new IPEndPoint(ipAddress, port));
+            IsRunning = true;
             // Add init massage to messages
             _messagesBytes.Add(Encoding.UTF8.GetBytes(
-                GetStartRunningMessage(_server.Client.LocalEndPoint)));
+                GetInitializeMessage(_socket.LocalEndPoint)));
             SendLastMessageToClients();
             // Thread for receiving messages
             Task.Run(() =>
             {
+                var buffer = new byte[4096];
+                EndPoint clientEndPoint;
                 while (_isRunning)
                 {
-                    IPEndPoint clientIpEndPoint = new(IPAddress.Any, 0);
-                    var buffer = _server.Receive(ref clientIpEndPoint);
-                    bool isNewClient = !_clientsIpEndPoints.Contains(clientIpEndPoint);
+                    // Start listenning
+                    clientEndPoint = new IPEndPoint(IPAddress.Any, port);
+                    var recievedBytesLength = _socket.ReceiveFrom(buffer, SocketFlags.None, ref clientEndPoint);
+                    bool isNewClient = !_clientsEndPoints.Contains(clientEndPoint);
 
                     // Check if it's new client
                     if (isNewClient)
                     {
-                        // Send new client all messages
+                        // Send all messages for new client
                         foreach (byte[] msg in _messagesBytes)
-                            _server.Send(msg, clientIpEndPoint);
+                            _socket.SendTo(msg, clientEndPoint);
                         // Add new client
-                        _clientsIpEndPoints.Add(clientIpEndPoint);
+                        _clientsEndPoints.Add(clientEndPoint);
                         lock (_messagesBytes)
                         {
                             _messagesBytes.Add(
                                 Encoding.UTF8.GetBytes(
-                                    GetClientConnectedMessage(clientIpEndPoint)));
+                                    GetClientConnectedMessage(clientEndPoint)));
                         }
                         // Notify clients about new client connection
                         SendLastMessageToClients();
@@ -63,16 +66,16 @@ namespace CSNT.Clientserverchat.Data.Models
                         if (!isNewClient && Enumerable.SequenceEqual(buffer, NetHelper.SpecialMessageBytes))
                         {
                             _messagesBytes.Add(Encoding.UTF8.GetBytes(
-                                GetClientDisconnectedMessage(clientIpEndPoint)));
+                                GetClientDisconnectedMessage(clientEndPoint)));
 
                             // Remove disconnected client
-                            lock (_clientsIpEndPoints)
-                                _clientsIpEndPoints.Remove(clientIpEndPoint);
+                            lock (_clientsEndPoints)
+                                _clientsEndPoints.Remove(clientEndPoint);
                         }
                         else
                         {
                             _messagesBytes.Add(
-                                GetClientFormattedMessageAsBytes(clientIpEndPoint, buffer));
+                                GetClientFormattedMessageAsBytes(clientEndPoint, buffer));
                         }
                     }
 
@@ -88,7 +91,7 @@ namespace CSNT.Clientserverchat.Data.Models
 
             _messagesBytes.Add(NetHelper.SpecialMessageBytes);
             SendLastMessageToClients();
-            _isRunning = false;
+            IsRunning = false;
             lock (_messagesBytes)
             {
                 _messagesBytes.Clear();
@@ -104,8 +107,8 @@ namespace CSNT.Clientserverchat.Data.Models
 
             var lastMessage = _messagesBytes[^1];
             MessageReceived?.Invoke(lastMessage);
-            foreach (IPEndPoint endPoint in _clientsIpEndPoints)
-                _server.Send(lastMessage, endPoint);
+            foreach (EndPoint endPoint in _clientsEndPoints)
+                _socket.SendTo(lastMessage, endPoint);
         }
     }
 }
