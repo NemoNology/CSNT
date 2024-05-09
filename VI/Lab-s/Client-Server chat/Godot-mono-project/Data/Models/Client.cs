@@ -12,7 +12,7 @@ namespace CSNT.Clientserverchat.Data.Models
         protected readonly CancellationTokenSource _cancellationTokenSource = new();
 
         public abstract event Action<byte[]> MessageReceived;
-        public event Action<ClientState> ClientStateChanged;
+        public event Action<ClientState> StateChanged;
 
         public ClientState State
         {
@@ -20,7 +20,7 @@ namespace CSNT.Clientserverchat.Data.Models
             protected set
             {
                 _state = value;
-                ClientStateChanged?.Invoke(_state);
+                StateChanged?.Invoke(_state);
             }
         }
 
@@ -31,7 +31,7 @@ namespace CSNT.Clientserverchat.Data.Models
         /// <param name="isForced">
         /// <c>true</c> if server closing, so client is forced to disconnect, <c>false</c> if client disconnecting by himself
         /// </param>
-        public abstract void Disconnect(bool isForced);
+        public abstract void Disconnect(bool isForced = false);
         public abstract void SendMessage(string message);
     }
 }
