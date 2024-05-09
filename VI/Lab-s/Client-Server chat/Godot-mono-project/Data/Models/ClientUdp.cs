@@ -28,7 +28,7 @@ namespace CSNT.Clientserverchat.Data.Models
             // Thread for recieving messages
             Task.Run(() =>
             {
-                byte[] buffer = new byte[4096];
+                byte[] buffer = new byte[NetHelper.BUFFERSIZE];
                 // Send message to server which means that client started connecting
                 SendMessage();
                 // Wait for server answer
@@ -56,22 +56,27 @@ namespace CSNT.Clientserverchat.Data.Models
             }, _cancellationTokenSource.Token);
         }
 
-        public override async void Disconnect(bool isForced = false)
+        public override void Disconnect(bool isForced = false)
         {
-            if (_state != ClientState.Disconnected)
+            if (_state == ClientState.Disconnected)
                 return;
 
             if (!isForced)
                 SendMessage();
+            _cancellationTokenSource.CancelAfter(1000);
+            Task.Run(async () =>
+            {
+                if (_socket.Connected)
+                {
+                    await _socket.DisconnectAsync(true);
+                }
+            }, _cancellationTokenSource.Token);
             State = ClientState.Disconnected;
-            if (_socket.Connected)
-                await _socket.DisconnectAsync(true);
-            _cancellationTokenSource.Cancel();
         }
 
         public override void SendMessage(string message = "")
         {
-            if (_state != ClientState.Disconnected)
+            if (_state == ClientState.Disconnected)
                 return;
 
             _socket.Send(
