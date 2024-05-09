@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://ctdxlbgxvth5m"]
+[gd_scene load_steps=2 format=3 uid="uid://ctdxlbgxvth5m"]
 
 [ext_resource type="Script" path="res://Data/Controllers/ServerViewController.cs" id="1_u2i0v"]
-[ext_resource type="Script" path="res://Data/Controllers/IPLineEditWithAutoLocalIPGetting.gd" id="2_vclw3"]
 
 [node name="Server" type="Control" node_paths=PackedStringArray("ServerNotRunningControl", "ServerRunningControl", "IpAddressInput", "PortInput", "ProtocolInput", "ErrorsOutput", "MessagesOutput")]
 layout_mode = 3
@@ -51,11 +50,10 @@ horizontal_alignment = 2
 [node name="LineEdit IPv4" type="LineEdit" parent="MarginContainer/Server not running control/GridContainer"]
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-text = "127.0.0.1"
-placeholder_text = "127.0.0.1"
+text = "192.168.3.0"
+placeholder_text = "192.168.3.0"
 max_length = 15
 structured_text_bidi_override = 6
-script = ExtResource("2_vclw3")
 
 [node name="Label2" type="Label" parent="MarginContainer/Server not running control/GridContainer"]
 layout_mode = 2
@@ -65,8 +63,8 @@ horizontal_alignment = 2
 [node name="LineEdit port" type="LineEdit" parent="MarginContainer/Server not running control/GridContainer"]
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-text = "40072"
-placeholder_text = "40072"
+text = "40070"
+placeholder_text = "40070"
 
 [node name="Label3" type="Label" parent="MarginContainer/Server not running control/GridContainer"]
 layout_mode = 2

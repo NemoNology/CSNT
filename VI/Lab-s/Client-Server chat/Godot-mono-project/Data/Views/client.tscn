@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://c0tkkn82w2kw3"]
+[gd_scene load_steps=2 format=3 uid="uid://c0tkkn82w2kw3"]
 
 [ext_resource type="Script" path="res://Data/Controllers/ClientViewController.cs" id="1_rc4qg"]
-[ext_resource type="Script" path="res://Data/Controllers/IPLineEditWithAutoLocalIPGetting.gd" id="2_lk3qo"]
 
 [node name="Client" type="Control" node_paths=PackedStringArray("ClientDisconnectedControl", "ClientConnectingControl", "ClientConnectedControl", "ClientIpInput", "ClientPortInput", "ServerIpInput", "ServerPortInput", "ProtocolInput", "ErrorsOutput", "MessagesOutput", "MessageInput")]
 layout_mode = 3
@@ -55,11 +54,10 @@ horizontal_alignment = 2
 [node name="LineEdit client IP" type="LineEdit" parent="MarginContainer/VBoxContainer when disconnected/GridContainer"]
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-text = "127.0.0.1"
-placeholder_text = "127.0.0.1"
+text = "192.168.3.0"
+placeholder_text = "192.168.3.0"
 max_length = 15
 structured_text_bidi_override = 6
-script = ExtResource("2_lk3qo")
 
 [node name="Label3" type="Label" parent="MarginContainer/VBoxContainer when disconnected/GridContainer"]
 layout_mode = 2
@@ -82,11 +80,10 @@ horizontal_alignment = 2
 [node name="LineEdit server IP" type="LineEdit" parent="MarginContainer/VBoxContainer when disconnected/GridContainer"]
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-text = "127.0.0.1"
-placeholder_text = "127.0.0.1"
+text = "192.168.3.0"
+placeholder_text = "192.168.3.0"
 max_length = 15
 structured_text_bidi_override = 6
-script = ExtResource("2_lk3qo")
 
 [node name="Label4" type="Label" parent="MarginContainer/VBoxContainer when disconnected/GridContainer"]
 layout_mode = 2
@@ -96,8 +93,8 @@ horizontal_alignment = 2
 [node name="LineEdit server port" type="LineEdit" parent="MarginContainer/VBoxContainer when disconnected/GridContainer"]
 custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-text = "40072"
-placeholder_text = "40072"
+text = "40070"
+placeholder_text = "40070"
 max_length = 15
 structured_text_bidi_override = 6
 
