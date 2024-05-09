@@ -34,13 +34,14 @@ namespace CSNT.Clientserverchat.Data.Models
             // Thread for receiving messages
             Task.Run(() =>
             {
-                var buffer = new byte[4096];
+                var buffer = new byte[NetHelper.BUFFERSIZE];
                 EndPoint clientEndPoint;
                 while (_isRunning)
                 {
                     // Start listenning
                     clientEndPoint = new IPEndPoint(IPAddress.Any, port);
-                    var recievedBytesLength = _socket.ReceiveFrom(buffer, SocketFlags.None, ref clientEndPoint);
+                    var recievedBytesLength = _socket.ReceiveFrom(buffer, ref clientEndPoint);
+                    var recievedBytes = buffer[..recievedBytesLength];
                     bool isNewClient = !_clientsEndPoints.Contains(clientEndPoint);
 
                     // Check if it's new client
@@ -63,7 +64,9 @@ namespace CSNT.Clientserverchat.Data.Models
 
                     lock (_messagesBytes)
                     {
-                        if (!isNewClient && Enumerable.SequenceEqual(buffer, NetHelper.SpecialMessageBytes))
+                        var isSpecialMessage = Enumerable.SequenceEqual(
+                            recievedBytes, NetHelper.SpecialMessageBytes);
+                        if (!isNewClient && isSpecialMessage)
                         {
                             _messagesBytes.Add(Encoding.UTF8.GetBytes(
                                 GetClientDisconnectedMessage(clientEndPoint)));
@@ -71,15 +74,19 @@ namespace CSNT.Clientserverchat.Data.Models
                             // Remove disconnected client
                             lock (_clientsEndPoints)
                                 _clientsEndPoints.Remove(clientEndPoint);
+
+                            SendLastMessageToClients();
                         }
-                        else
+                        else if (!isSpecialMessage)
                         {
-                            _messagesBytes.Add(
-                                GetClientFormattedMessageAsBytes(clientEndPoint, buffer));
+                            _messagesBytes.Add(Encoding.UTF8.GetBytes(
+                                GetClientFormattedMessage(clientEndPoint, recievedBytes)));
+
+                            SendLastMessageToClients();
                         }
                     }
 
-                    SendLastMessageToClients();
+
                 }
             }, _cancellationTokenSource.Token);
         }
