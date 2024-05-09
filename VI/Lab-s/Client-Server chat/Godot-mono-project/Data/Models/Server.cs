@@ -38,15 +38,15 @@ namespace CSNT.Clientserverchat.Data.Models
         public abstract void Stop();
 
         public static string GetInitializeMessage(EndPoint localEndPoint)
-            => $"Сервер ({localEndPoint}) ({DateTime.Now}) запущен";
+            => $"Сервер ({localEndPoint}) ({DateTime.Now}) запущен\n";
 
         public static string GetClientConnectedMessage(EndPoint clientEndPoint)
-         => $"Клиент ({clientEndPoint}) ({DateTime.Now}) подключился";
+            => $"Клиент ({clientEndPoint}) ({DateTime.Now}) подключился\n";
 
         public static string GetClientDisconnectedMessage(EndPoint clientEndPoint)
-        => $"Клиент ({clientEndPoint}) ({DateTime.Now}) отключился";
+            => $"Клиент ({clientEndPoint}) ({DateTime.Now}) отключился\n";
 
-        public static byte[] GetClientFormattedMessageAsBytes(EndPoint clientEndPoint, byte[] messageBytes)
-         => Encoding.UTF8.GetBytes($"{clientEndPoint} ({DateTime.Now}): ").Concat(messageBytes).ToArray();
+        public static string GetClientFormattedMessage(EndPoint clientEndPoint, byte[] messageBytes)
+            => $"{clientEndPoint} ({DateTime.Now}): " + Encoding.UTF8.GetString(messageBytes) + "\n";
     }
 }
