@@ -47,23 +47,32 @@ namespace CSNT.Clientserverchat.Data.Models
             }, _cancellationTokenSource.Token);
         }
 
-        public override async void Disconnect(bool isForced = false)
+        public override void Disconnect(bool isForced = false)
         {
             if (_state == ClientState.Disconnected)
                 return;
 
+
+            SendMessage();
+            _cancellationTokenSource.CancelAfter(1000);
+            Task.Run(async () =>
+            {
+                if (_socket.Connected)
+                {
+                    await _socket.DisconnectAsync(true);
+                }
+            }, _cancellationTokenSource.Token);
             State = ClientState.Disconnected;
-            if (_socket.Connected)
-                await _socket.DisconnectAsync(true);
-            _cancellationTokenSource.Cancel();
         }
 
-        public override void SendMessage(string message)
+        public override void SendMessage(string message = "")
         {
             if (_state != ClientState.Connected || !_socket.Connected)
                 return;
 
-            _socket.Send(Encoding.UTF8.GetBytes(message));
+            _socket.Send(
+                message == "" ? NetHelper.SpecialMessageBytes : Encoding.UTF8.GetBytes(message)
+            );
         }
     }
 }
