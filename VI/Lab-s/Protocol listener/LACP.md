@@ -77,3 +77,4 @@
 - [Habr. Протокол агрегирования каналов: Etherchannel](https://habr.com/ru/articles/334778/);
 - [LearnDuty. LACP Port Channel Explained (Link Aggregation Deep Dive)](https://learnduty.com/network-techs/lacp-port-channel-explained-link-aggregation-deep-dive/);
 - [Nag wiki. LACP и агрегация портов](https://nag.wiki/pages/viewpage.action?pageId=25108332);
+- [Carrier Sense Multiple Access with Collision Detection (CSMA/CD) access method and physical layer specifications](http://magrawal.myweb.usf.edu/dcom/Ch3_802.3-2005_section3.pdf)
