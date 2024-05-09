@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://Data/Controllers/ClientViewController.cs" id="1_rc4qg"]
 [ext_resource type="Script" path="res://Data/Controllers/IPLineEditWithAutoLocalIPGetting.gd" id="2_lk3qo"]
 
-[node name="Client" type="Control" node_paths=PackedStringArray("ClientDisconnectedControl", "ClientConnectedControl", "ClientIpInput", "ClientPortInput", "ServerIpInput", "ServerPortInput", "ProtocolInput", "ErrorsOutput", "MessagesContainer", "MessageInput")]
+[node name="Client" type="Control" node_paths=PackedStringArray("ClientDisconnectedControl", "ClientConnectingControl", "ClientConnectedControl", "ClientIpInput", "ClientPortInput", "ServerIpInput", "ServerPortInput", "ProtocolInput", "ErrorsOutput", "MessagesOutput", "MessageInput")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,6 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_rc4qg")
 ClientDisconnectedControl = NodePath("MarginContainer/VBoxContainer when disconnected")
+ClientConnectingControl = NodePath("MarginContainer/VBoxContainer when connecting")
 ClientConnectedControl = NodePath("MarginContainer/VBoxContainer when connected")
 ClientIpInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridContainer/LineEdit client IP")
 ClientPortInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridContainer/LineEdit client port")
@@ -19,7 +20,7 @@ ServerIpInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridCo
 ServerPortInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridContainer/LineEdit server port")
 ProtocolInput = NodePath("MarginContainer/VBoxContainer when disconnected/GridContainer/OptionButton protocol")
 ErrorsOutput = NodePath("MarginContainer/VBoxContainer when disconnected/Label errors")
-MessagesContainer = NodePath("MarginContainer/VBoxContainer when connected/ScrollContainer/VBoxContainer messages")
+MessagesOutput = NodePath("MarginContainer/VBoxContainer when connected/ScrollContainer/Label messages output")
 MessageInput = NodePath("MarginContainer/VBoxContainer when connected/HBoxContainer/LineEdit message")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
@@ -123,6 +124,26 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Подключится к серверу"
 
+[node name="VBoxContainer when connecting" type="VBoxContainer" parent="MarginContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/separation = 16
+
+[node name="Label" type="RichTextLabel" parent="MarginContainer/VBoxContainer when connecting"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[wave freq=3]Ожидаем ответа от сервера..."
+fit_content = true
+autowrap_mode = 0
+
+[node name="Button" type="Button" parent="MarginContainer/VBoxContainer when connecting"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "Отключиться"
+
 [node name="VBoxContainer when connected" type="VBoxContainer" parent="MarginContainer"]
 visible = false
 layout_mode = 2
@@ -132,8 +153,9 @@ theme_override_constants/separation = 16
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="VBoxContainer messages" type="VBoxContainer" parent="MarginContainer/VBoxContainer when connected/ScrollContainer"]
+[node name="Label messages output" type="Label" parent="MarginContainer/VBoxContainer when connected/ScrollContainer"]
 layout_mode = 2
+size_flags_vertical = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer when connected"]
 layout_mode = 2
@@ -155,5 +177,6 @@ size_flags_vertical = 4
 text = "Отключиться"
 
 [connection signal="pressed" from="MarginContainer/VBoxContainer when disconnected/Button" to="." method="OnConnectButtonPressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer when connecting/Button" to="." method="OnDisconnectButtonPressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer when connected/HBoxContainer/Button" to="." method="OnSendMessageButtonPressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer when connected/Button" to="." method="OnDisconnectButtonPressed"]
