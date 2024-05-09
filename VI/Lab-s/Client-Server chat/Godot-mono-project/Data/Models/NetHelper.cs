@@ -6,6 +6,7 @@ namespace CSNT.Clientserverchat.Data.Models
     public static class NetHelper
     {
         public static readonly byte[] SpecialMessageBytes = { 1, 0, 1 };
+        public const int BUFFERSIZE = 4096;
 
         public static bool IsAddressForTransportProtocolAvailable(IPEndPoint endPoint, bool isUdp)
         {
