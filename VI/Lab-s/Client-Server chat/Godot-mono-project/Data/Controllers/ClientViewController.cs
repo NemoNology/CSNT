@@ -160,8 +160,9 @@ namespace CSNT.Clientserverchat.Data.Controllers
 
         public override void _ExitTree()
         {
+            if (_client is not null)
+                OnDisconnectButtonPressed();
             base._ExitTree();
-            _client?.Disconnect();
         }
     }
 }

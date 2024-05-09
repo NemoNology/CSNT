@@ -117,8 +117,9 @@ namespace CSNT.Clientserverchat.Data.Controllers
 
         public override void _ExitTree()
         {
+            if (_server is not null)
+                OnStopServerButtonPressed();
             base._ExitTree();
-            _server?.Stop();
         }
     }
 }
