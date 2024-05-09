@@ -54,9 +54,7 @@ namespace CSNT.Clientserverchat.Data.Models
                     }
 
                     lock (_clientsSockets)
-                    {
                         _clientsSockets.Add(clientSocket);
-                    }
 
                     // Notify about new client
                     SendLastMessageToClients();
@@ -64,15 +62,14 @@ namespace CSNT.Clientserverchat.Data.Models
                     // Start recieve messages from connected client in another thread
                     Task.Run(() =>
                     {
-                        byte[] buffer = new byte[2048];
+                        byte[] buffer = new byte[NetHelper.BUFFERSIZE];
                         int recievedBytesLength;
                         while (clientSocket.Connected)
                         {
                             recievedBytesLength = clientSocket.Receive(buffer);
+                            var recievedBytes = buffer[..recievedBytesLength];
 
-                            // Special message means dissconecting
-                            if (Enumerable.SequenceEqual(
-                                buffer[..recievedBytesLength], NetHelper.SpecialMessageBytes))
+                            if (Enumerable.SequenceEqual(recievedBytes, NetHelper.SpecialMessageBytes))
                             {
                                 lock (_clientsSockets)
                                     _clientsSockets.Remove(clientSocket);
@@ -82,15 +79,13 @@ namespace CSNT.Clientserverchat.Data.Models
                                         Encoding.UTF8.GetBytes(
                                             GetClientDisconnectedMessage(clientSocket.RemoteEndPoint)));
                                 }
-                                // Notify clients about someone client disconnecting and end thread working 
-                                SendLastMessageToClients();
-                                return;
                             }
-                            // If it's not special message then just add it to messages
-                            lock (_messagesBytes)
+                            else
                             {
-                                _messagesBytes.Add(GetClientFormattedMessageAsBytes(
-                                    clientSocket.RemoteEndPoint, buffer[..recievedBytesLength]));
+                                _messagesBytes.Add(Encoding.UTF8.GetBytes(
+                                    GetClientFormattedMessage(
+                                        clientSocket.RemoteEndPoint, buffer[..recievedBytesLength])
+                                    ));
                             }
 
                             SendLastMessageToClients();
