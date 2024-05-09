@@ -15,6 +15,8 @@ namespace CSNT.Clientserverchat.Data.Controllers
         [Export]
         public Control ClientDisconnectedControl { get; set; }
         [Export]
+        public Control ClientConnectingControl { get; set; }
+        [Export]
         public Control ClientConnectedControl { get; set; }
         [Export]
         public LineEdit ClientIpInput { get; set; }
@@ -29,7 +31,7 @@ namespace CSNT.Clientserverchat.Data.Controllers
         [Export]
         public Label ErrorsOutput { get; set; }
         [Export]
-        public VBoxContainer MessagesContainer { get; set; }
+        public Label MessagesOutput { get; set; }
         [Export]
         public LineEdit MessageInput { get; set; }
 
@@ -38,70 +40,98 @@ namespace CSNT.Clientserverchat.Data.Controllers
             ushort clientPort, serverPort;
             IPAddress serverIpAddress;
             bool isUdp = ProtocolInput.Selected == 0;
+            PrintErrorMessageDeferred("");
             if (!IPAddress.TryParse(ClientIpInput.Text, out IPAddress clientIpAddress))
             {
-                CallDeferred(nameof(PrintErrorMessage), "Неверный IP-адрес клиента");
+                PrintErrorMessageDeferred("Неверный IP-адрес клиента");
                 return;
             }
             else if (!ushort.TryParse(ClientPortInput.Text, out clientPort))
             {
-                CallDeferred(nameof(PrintErrorMessage), "Неверный порт клиента");
+                PrintErrorMessageDeferred("Неверный порт клиента");
                 return;
             }
             else if (!IPAddress.TryParse(ServerIpInput.Text, out serverIpAddress))
             {
-                CallDeferred(nameof(PrintErrorMessage), "Неверный IP-адрес сервера");
+                PrintErrorMessageDeferred("Неверный IP-адрес сервера");
                 return;
             }
             else if (!ushort.TryParse(ServerPortInput.Text, out serverPort))
             {
-                CallDeferred(nameof(PrintErrorMessage), "Неверный порт сервера");
+                PrintErrorMessageDeferred("Неверный порт сервера");
                 return;
             }
             else if (!NetHelper.IsAddressForTransportProtocolAvailable(new IPEndPoint(clientIpAddress, clientPort), isUdp))
             {
-                CallDeferred(nameof(PrintErrorMessage), "Данный адрес для клиента занят");
-                return;
-            }
-            else if (!NetHelper.IsThereActiveListenerWithSpecifiedAddress(new IPEndPoint(serverIpAddress, serverPort), isUdp))
-            {
-                CallDeferred(nameof(PrintErrorMessage), "Не найден слушатель (сервер) с введёнными данными");
+                PrintErrorMessageDeferred("Данный адрес для клиента занят");
                 return;
             }
 
-            CallDeferred(nameof(PrintErrorMessage), "");
             _client = isUdp ? new ClientUdp() : new ClientTcp();
-            _client.MessageReceived += OnMessageRecieved;
+            _client.MessageReceived += OnMessageRecievedDeferred;
+            _client.StateChanged += OnClientStateChangedDeferred;
 
             try
             {
                 _client.Connect(clientIpAddress, clientPort, serverIpAddress, serverPort);
-                CallDeferred(nameof(SwitchControlsVisibility));
             }
             catch (Exception e)
             {
-                CallDeferred(nameof(PrintErrorMessage), "Не удалось подключиться:\n" + e.Message);
+                PrintErrorMessageDeferred("Не удалось подключиться:\n" + e.Message);
+                OnDisconnectButtonPressed();
+            }
+        }
+
+        private void OnClientStateChangedDeferred(ClientState state)
+        {
+            CallDeferred(nameof(OnClientStateChanged), (int)state);
+        }
+
+        private void OnMessageRecievedDeferred(byte[] messageBytes)
+        {
+            if (Enumerable.SequenceEqual(messageBytes, NetHelper.SpecialMessageBytes))
+            {
+                OnDisconnectButtonPressed();
+                PrintErrorMessageDeferred("Сервер был остановлен");
+                return;
+            }
+            CallDeferred(nameof(AddMessageToOutput), messageBytes);
+        }
+
+        private void OnClientStateChanged(int state)
+        {
+            switch (state)
+            {
+                case 0:
+                    ClientDisconnectedControl.Visible = true;
+                    ClientConnectingControl.Visible = false;
+                    ClientConnectedControl.Visible = false;
+                    return;
+                case 1:
+                    ClientDisconnectedControl.Visible = false;
+                    ClientConnectingControl.Visible = true;
+                    ClientConnectedControl.Visible = false;
+                    return;
+                case 2:
+                    ClientDisconnectedControl.Visible = false;
+                    ClientConnectingControl.Visible = false;
+                    ClientConnectedControl.Visible = true;
+                    return;
+                default: return;
             }
         }
 
         private void OnDisconnectButtonPressed()
         {
             _client.Disconnect();
-            _client.MessageReceived -= OnMessageRecieved;
+            _client.MessageReceived -= OnMessageRecievedDeferred;
+            _client.StateChanged -= OnClientStateChangedDeferred;
             CallDeferred(nameof(ClearMessages));
-            CallDeferred(nameof(SwitchControlsVisibility));
-        }
-
-        private void SwitchControlsVisibility()
-        {
-            ClientConnectedControl.Visible = !ClientConnectedControl.Visible;
-            ClientDisconnectedControl.Visible = !ClientDisconnectedControl.Visible;
         }
 
         private void ClearMessages()
         {
-            foreach (Node child in MessagesContainer.GetChildren())
-                MessagesContainer.RemoveChild(child);
+            MessagesOutput.Text = "";
         }
 
         private void OnSendMessageButtonPressed()
@@ -113,16 +143,9 @@ namespace CSNT.Clientserverchat.Data.Controllers
             MessageInput.Text = string.Empty;
         }
 
-        private void OnMessageRecieved(byte[] messageBytes)
+        private void PrintErrorMessageDeferred(string message)
         {
-            if (messageBytes.Length == 0
-                || Enumerable.SequenceEqual(messageBytes, ServerTcp.CloseMessageBytes))
-            {
-                OnDisconnectButtonPressed();
-                CallDeferred(nameof(PrintErrorMessage), "Сервер был остановлен");
-                return;
-            }
-            CallDeferred(nameof(AddMessageAsChild), messageBytes);
+            CallDeferred(nameof(PrintErrorMessage), message);
         }
 
         private void PrintErrorMessage(string message)
@@ -130,9 +153,9 @@ namespace CSNT.Clientserverchat.Data.Controllers
             ErrorsOutput.Text = message;
         }
 
-        private void AddMessageAsChild(byte[] messageBytes)
+        private void AddMessageToOutput(byte[] messageBytes)
         {
-            MessagesContainer.AddChild(new Label { Text = Encoding.UTF8.GetString(messageBytes) });
+            MessagesOutput.Text += Encoding.UTF8.GetString(messageBytes);
         }
 
         public override void _ExitTree()
