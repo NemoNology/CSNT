@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Data/Controllers/MainViewController.cs" id="1_gwvdx"]
 
-[node name="Main" type="Control" node_paths=PackedStringArray("IpAddressInput", "PortInput", "ErrorsOutput")]
+[node name="Main" type="Control" node_paths=PackedStringArray("PortInput", "PacketsOutput", "ErrorsOutput", "StartStopListenningButton")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,9 +10,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_gwvdx")
-IpAddressInput = NodePath("MarginContainer/VBoxContainer/GridContainer/LineEdit ip")
-PortInput = NodePath("MarginContainer/VBoxContainer/GridContainer/LineEdit2 port")
+PortInput = NodePath("MarginContainer/VBoxContainer/HBoxContainer/Port input")
+PacketsOutput = NodePath("MarginContainer/VBoxContainer/Packets output")
 ErrorsOutput = NodePath("MarginContainer/VBoxContainer/Label errors")
+StartStopListenningButton = NodePath("MarginContainer/VBoxContainer/HBoxContainer/Start-End listen")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -21,55 +22,41 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 32
-theme_override_constants/margin_top = 32
-theme_override_constants/margin_right = 32
-theme_override_constants/margin_bottom = 32
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
-theme_override_constants/separation = 16
+theme_override_constants/separation = 8
 
-[node name="GridContainer" type="GridContainer" parent="MarginContainer/VBoxContainer"]
+[node name="Packets output" type="ItemList" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-size_flags_horizontal = 4
-columns = 2
-
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/GridContainer"]
-layout_mode = 2
-text = "Прослушиваемый IP-адрес"
-horizontal_alignment = 2
-
-[node name="LineEdit ip" type="LineEdit" parent="MarginContainer/VBoxContainer/GridContainer"]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-text = "127.0.0.1"
-placeholder_text = "127.0.0.1"
-max_length = 27
-
-[node name="Label2" type="Label" parent="MarginContainer/VBoxContainer/GridContainer"]
-layout_mode = 2
-text = "Прослушиваемый порт"
-horizontal_alignment = 2
-
-[node name="LineEdit2 port" type="LineEdit" parent="MarginContainer/VBoxContainer/GridContainer"]
-custom_minimum_size = Vector2(140, 0)
-layout_mode = 2
-text = "40080"
-placeholder_text = "40080"
-max_length = 27
+size_flags_vertical = 3
 
 [node name="Label errors" type="Label" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(300, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Button start sniffering" type="Button" parent="MarginContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 4
-text = "Начать слушать на данном адресе"
+theme_override_constants/separation = 16
 
-[connection signal="pressed" from="MarginContainer/VBoxContainer/Button start sniffering" to="." method="OnStartSnifferingButtonPressed"]
+[node name="Start-End listen" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Начать слушать
+"
+
+[node name="Port input" type="LineEdit" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "40080"
+placeholder_text = "40070-40100"
+max_length = 5
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start-End listen" to="." method="OnStartStopSnifferingButtonPressed"]

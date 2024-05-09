@@ -15,10 +15,6 @@ run/main_scene="res://Data/Views/main.tscn"
 config/features=PackedStringArray("4.2", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
-[autoload]
-
-SnifferController="*res://Data/Models/SnifferController.cs"
-
 [dotnet]
 
 project/assembly_name="LACP sniffer"
