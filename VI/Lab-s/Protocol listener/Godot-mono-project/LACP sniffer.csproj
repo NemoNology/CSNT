@@ -6,4 +6,7 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <RootNamespace>LACPsniffer</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="SharpPcap" Version="6.3.0" />
+  </ItemGroup>
 </Project>
