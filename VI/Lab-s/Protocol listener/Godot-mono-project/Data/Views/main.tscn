@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Data/Controllers/MainViewController.cs" id="1_gwvdx"]
 
-[node name="Main" type="Control" node_paths=PackedStringArray("PortInput", "PacketsOutput", "ErrorsOutput", "StartStopListenningButton")]
+[node name="Main" type="Control" node_paths=PackedStringArray("PacketsOutput", "ErrorsOutput", "StartStopListenningButton")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,7 +10,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_gwvdx")
-PortInput = NodePath("MarginContainer/VBoxContainer/HBoxContainer/Port input")
 PacketsOutput = NodePath("MarginContainer/VBoxContainer/Packets output")
 ErrorsOutput = NodePath("MarginContainer/VBoxContainer/Label errors")
 StartStopListenningButton = NodePath("MarginContainer/VBoxContainer/HBoxContainer/Start-End listen")
@@ -51,12 +50,5 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Начать слушать
 "
-
-[node name="Port input" type="LineEdit" parent="MarginContainer/VBoxContainer/HBoxContainer"]
-custom_minimum_size = Vector2(60, 0)
-layout_mode = 2
-text = "40080"
-placeholder_text = "40070-40100"
-max_length = 5
 
 [connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start-End listen" to="." method="OnStartStopSnifferingButtonPressed"]
