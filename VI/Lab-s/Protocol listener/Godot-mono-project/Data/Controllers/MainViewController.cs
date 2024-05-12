@@ -6,13 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Godot;
 using LacpSniffer.Data.Models;
-using LACPsniffer.Data.Models;
+using SharpPcap;
 namespace LacpSniffer.Data.Controllers;
 
 public partial class MainViewController : Control
 {
-    private readonly CancellationTokenSource _cts = new();
-    private Socket _socket;
     private bool _isListening = false;
 
     [ExportCategory("Sniffer")]
@@ -30,42 +28,55 @@ public partial class MainViewController : Control
         ErrorsOutput.Text = "";
         if (_isListening)
         {
-            _cts.Cancel();
-            _socket.Close();
+            foreach (var device in CaptureDeviceList.Instance)
+            {
+                device.StopCapture();
+                device.OnPacketArrival -= OnPacketArrival;
+                device.Close();
+            }
         }
         else
         {
+            GD.Print(string.Join("", Enumerable.Repeat("-", 35)));
             PacketsOutput.Clear();
-            _socket = new(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.Raw);
-            GD.Print("Socket created");
-            Task.Run(() =>
+            foreach (var device in CaptureDeviceList.Instance)
             {
-                try
-                {
-                    byte[] buffer = new byte[BUFFERSIZE];
-                    _socket.Bind(new IPEndPoint(IPAddress.Any, 0));
-                    while (!_cts.IsCancellationRequested)
-                    {
-                        int receivedBytesLength = _socket.Receive(buffer);
-                        GD.Print($"Recieved bytes:\n\t{string.Join(", ", buffer[..receivedBytesLength].Select(x => x.ToString()))}");
-                    }
-                }
-                catch (TaskCanceledException)
-                {
-                    GD.Print("Task was canceled");
-                }
-                catch (Exception e)
-                {
-                    GD.PushError("Error: " + e.Message);
-                }
-            }, _cts.Token);
+                device.Open();
+                device.OnPacketArrival += OnPacketArrival;
+                device.StartCapture();
+            }
         }
         _isListening = !_isListening;
         StartStopListenningButton.Text = (_isListening ? "Закончить" : "Начать") + " слушать";
     }
 
-    private void OnPacketRecieved(LacpPacket packet)
+    private void OnPacketArrival(object sender, PacketCapture e)
     {
-        PacketsOutput.AddItem(packet.ToString());
+        GD.Print(e.GetPacket().PacketLength);
+    }
+
+    public override void _Ready()
+    {
+        int i = 0;
+        foreach (var device in CaptureDeviceList.Instance)
+        {
+            GD.Print($"Device {i}: {device.Name}");
+            i++;
+        }
+        base._Ready();
+    }
+
+    public override void _ExitTree()
+    {
+        if (_isListening)
+        {
+            foreach (var device in CaptureDeviceList.Instance)
+            {
+                device.StopCapture();
+                device.OnPacketArrival -= OnPacketArrival;
+                device.Close();
+            }
+        }
+        base._ExitTree();
     }
 }
