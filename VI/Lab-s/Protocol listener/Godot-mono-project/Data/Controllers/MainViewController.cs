@@ -11,13 +11,11 @@ namespace LacpSniffer.Data.Controllers;
 
 public partial class MainViewController : Control
 {
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    private readonly CancellationTokenSource _cts = new();
     private Socket _socket;
     private bool _isListening = false;
 
     [ExportCategory("Sniffer")]
-    [Export]
-    public LineEdit PortInput { get; set; }
     [Export]
     public ItemList PacketsOutput { get; set; }
     [Export]
@@ -25,39 +23,45 @@ public partial class MainViewController : Control
     [Export]
     public Button StartStopListenningButton { get; set; }
 
-    public const int BUFFERSIZE = 4096;
+    public const int BUFFERSIZE = ushort.MaxValue;
 
     private void OnStartStopSnifferingButtonPressed()
     {
         ErrorsOutput.Text = "";
         if (_isListening)
         {
-            _cancellationTokenSource.Cancel();
+            _cts.Cancel();
             _socket.Close();
         }
         else
         {
-            if (!ushort.TryParse(PortInput.Text, out var port))
-            {
-                ErrorsOutput.Text = "Некорректный порт";
-                return;
-            }
             PacketsOutput.Clear();
             _socket = new(AddressFamily.InterNetwork, SocketType.Raw, ProtocolType.Raw);
+            GD.Print("Socket created");
             Task.Run(() =>
             {
-                EndPoint endPoint;
-                byte[] buffer = new byte[BUFFERSIZE];
-                while (!_cancellationTokenSource.IsCancellationRequested)
+                try
                 {
-                    endPoint = new IPEndPoint(IPAddress.Any, port);
-                    int receivedBytesLength = _socket.ReceiveFrom(buffer, BUFFERSIZE, SocketFlags.None, ref endPoint);
-                    GD.Print($"Recieved bytes:\n\t{string.Join(", ", buffer[..receivedBytesLength].Select(x => x.ToString()))}");
+                    byte[] buffer = new byte[BUFFERSIZE];
+                    _socket.Bind(new IPEndPoint(IPAddress.Any, 0));
+                    while (!_cts.IsCancellationRequested)
+                    {
+                        int receivedBytesLength = _socket.Receive(buffer);
+                        GD.Print($"Recieved bytes:\n\t{string.Join(", ", buffer[..receivedBytesLength].Select(x => x.ToString()))}");
+                    }
                 }
-            }, _cancellationTokenSource.Token);
+                catch (TaskCanceledException)
+                {
+                    GD.Print("Task was canceled");
+                }
+                catch (Exception e)
+                {
+                    GD.PushError("Error: " + e.Message);
+                }
+            }, _cts.Token);
         }
         _isListening = !_isListening;
-        StartStopListenningButton.Text = (_isListening ? "Начать" : "Закончить") + " слушать";
+        StartStopListenningButton.Text = (_isListening ? "Закончить" : "Начать") + " слушать";
     }
 
     private void OnPacketRecieved(LacpPacket packet)
