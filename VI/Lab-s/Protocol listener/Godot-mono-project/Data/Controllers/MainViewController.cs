@@ -1,31 +1,28 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
 using Godot;
 using LacpSniffer.Data.Models;
+using LACPsniffer.Data.Models;
 using SharpPcap;
 namespace LacpSniffer.Data.Controllers;
 
 public partial class MainViewController : Control
 {
     private bool _isListening = false;
+    private int _previousePacketIndex = -1;
+    private readonly List<LacpPacket> _packets = new(10);
 
     [ExportCategory("Sniffer")]
     [Export]
     public ItemList PacketsOutput { get; set; }
     [Export]
-    public Label ErrorsOutput { get; set; }
+    public RichTextLabel PacketOutput { get; set; }
     [Export]
     public Button StartStopListenningButton { get; set; }
 
-    public const int BUFFERSIZE = ushort.MaxValue;
-
     private void OnStartStopSnifferingButtonPressed()
     {
-        ErrorsOutput.Text = "";
         if (_isListening)
         {
             foreach (var device in CaptureDeviceList.Instance)
@@ -37,8 +34,8 @@ public partial class MainViewController : Control
         }
         else
         {
-            GD.Print(string.Join("", Enumerable.Repeat("-", 35)));
             PacketsOutput.Clear();
+            _packets.Clear();
             foreach (var device in CaptureDeviceList.Instance)
             {
                 device.Open();
@@ -52,15 +49,66 @@ public partial class MainViewController : Control
 
     private void OnPacketArrival(object sender, PacketCapture e)
     {
-        GD.Print(e.GetPacket().PacketLength);
+        var bytes = e.Data.ToArray();
+        bool isLacp = bytes.IsLacpPacket();
+        if (isLacp)
+        {
+            var packet = bytes.ToLacpPacket();
+            if (_packets.Contains(packet))
+                return;
+
+            AddItemToPacketsItems(packet.ToString());
+            _packets.Add(packet);
+        }
+        // else
+        // {
+        //     GD.Print($"Packet arrivied; Is LAPC: {isLacp}");
+        //     GD.Print($"\tPacket data length: {bytes.Length}; [LACP - {LacpPacket.LENGTH}]");
+        //     GD.Print($"\tPacket destination: {bytes[..6].ToMacAddressString()}; [LACP - {LacpPacket.LacpDestinationAddress.ToMacAddressString()}]");
+        //     GD.Print($"\tPacket type/length: {bytes[12..14].ToHexString()}; [LACP - {LacpPacket.TypeLengthOfLacpPacket.ToHexString()}]");
+        // }
     }
+
+    private void SetPacketOutputText_ND(string text)
+    {
+        PacketOutput.Text = text;
+    }
+
+    private void AddItemToPacketsItems_ND(string item)
+    {
+        PacketsOutput.AddItem(item);
+    }
+
+    private void SetPacketOutputText(string text)
+    {
+        CallDeferred(nameof(SetPacketOutputText_ND), text);
+    }
+
+    private void AddItemToPacketsItems(string item)
+    {
+        CallDeferred(nameof(AddItemToPacketsItems_ND), item);
+    }
+
+    private void OnPacketSelected(int index)
+    {
+        if (_previousePacketIndex == index)
+            SetPacketOutputText("");
+        else
+        {
+            _previousePacketIndex = index;
+            SetPacketOutputText(_packets[index].FullInfoAsString);
+        }
+    }
+
+    private void OnPacketDeselected(Vector2 mousePosition, int mouseButtonIndex)
+        => SetPacketOutputText("");
 
     public override void _Ready()
     {
         int i = 0;
         foreach (var device in CaptureDeviceList.Instance)
         {
-            GD.Print($"Device {i}: {device.Name}");
+            GD.Print($"Device {i}: {device.Name}. {device.Description}");
             i++;
         }
         base._Ready();
