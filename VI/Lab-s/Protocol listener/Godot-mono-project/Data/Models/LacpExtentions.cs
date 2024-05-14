@@ -1,3 +1,4 @@
+using System.Linq;
 using LacpSniffer.Data.Models;
 
 namespace LACPsniffer.Data.Models
@@ -11,7 +12,7 @@ namespace LACPsniffer.Data.Models
         /// <returns>LacpPacket if the packet is valid, packet with zero values - otherwise</returns>
         public static LacpPacket ToLacpPacket(this byte[] bytes)
         {
-            if (bytes.Length < 128)
+            if (bytes.Length < LacpPacket.LENGTH)
                 return new();
             return new(
                 bytes[..6],
@@ -43,9 +44,31 @@ namespace LACPsniffer.Data.Models
                 bytes[60..72],
                 bytes[72],
                 bytes[73],
-                bytes[74..124],
-                bytes[124..]
+                bytes[74..124]
             );
+        }
+
+        public static bool IsLacpPacket(this byte[] bytes)
+            => bytes.Length == LacpPacket.LENGTH
+            && bytes[12..14].SequenceEqual(LacpPacket.TypeLengthOfLacpPacket)
+            && bytes[..6].SequenceEqual(LacpPacket.LacpDestinationAddress);
+
+        public static string ToHexString(this byte[] bytes)
+            => string.Join("", bytes.Select(x => x.ToString("x2")));
+
+        public static string ToMacAddressString(this byte[] bytes)
+            => bytes.Length < 6 ? "none" : string.Join(":", bytes[..6].Select(x => x.ToString("x2")));
+
+        public static string ToLacpPortState(this byte b, string postfix = " ")
+        {
+            return $"{((b & 1) == 1 ? "Active" : "Passive")}{postfix}"
+                + $"{((b & 2) == 2 ? "Fast" : "Slow")}{postfix}"
+                + $"Port is {((b & 4) == 4 ? "" : "not ")}aggregating{postfix}"
+                + $"Port is {((b & 8) == 8 ? "synchronized" : "not usable/standby")}{postfix}"
+                + $"Port is {((b & 16) == 16 ? "" : "not ")}collecting{postfix}"
+                + $"{((b & 32) == 32 ? "D" : "Not d")}istributing{postfix}"
+                + $"Packet is {((b & 64) == 64 ? "D" : "Not d")}efaulted{postfix}"
+                + $"{((b & 128) == 128 ? "E" : "Not e")}xpared";
         }
     }
 }
