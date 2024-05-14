@@ -1,15 +1,25 @@
+using System;
+using System.Linq;
+using LACPsniffer.Data.Models;
+
 namespace LacpSniffer.Data.Models
 {
+    /// <summary>
+    /// Packet of LACP - LACPDU
+    /// </summary>
     public struct LacpPacket
     {
+        public const int LENGTH = 124;
         /// <summary>
         /// The protocol type for LACPDU in the packet header
         /// </summary>
-        public static readonly int LacpDuPacketType = 0x8809;
+        public static readonly byte[] TypeLengthOfLacpPacket = { 0x88, 0x09 };
+        public static readonly byte SubtypeOfLacpPacket = 0x01;
         /// <summary>
         /// LACP packets are sent with multicast group MAC-address 01:80:C2:00:00:02
         /// </summary>
-        public static readonly byte[] MulticastMacAddress = new byte[6] { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x02 };
+        public static readonly byte[] LacpDestinationAddress = new byte[6] { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x02 };
+
 
         /// <summary>
         /// Destination MAC-address;<br/>
@@ -25,10 +35,10 @@ namespace LacpSniffer.Data.Models
         /// ;<br/>
         /// <i>2 bytes</i>;
         /// </summary>
-        public byte[] Length_Type;
+        public byte[] TypeLength;
         public byte Subtype;
         public byte VersionNumber;
-        public byte ActorTlvType;
+        public byte ActorTlv;
         public byte ActorInformationLength;
         /// <summary>
         /// ;<br/>
@@ -39,7 +49,7 @@ namespace LacpSniffer.Data.Models
         /// ;<br/>
         /// <i>6 bytes</i>;
         /// </summary>
-        public byte[] ActorSystem;
+        public byte[] ActorSystemMacAddress;
         /// <summary>
         /// Number which indicates the port channel configured ID of actor (sender);<br/>
         /// <i>2 bytes</i>;
@@ -71,7 +81,7 @@ namespace LacpSniffer.Data.Models
         /// <i>3 bytes</i>;
         /// </summary>
         public byte[] ActorReserved;
-        public byte PartnerTlvType;
+        public byte PartnerTlv;
         public byte PartnerInformationLength;
         /// <summary>
         /// ;<br/>
@@ -82,7 +92,7 @@ namespace LacpSniffer.Data.Models
         /// ;<br/>
         /// <i>6 bytes</i>;
         /// </summary>
-        public byte[] PartnerSystem;
+        public byte[] PartnerSystemMacAddress;
         /// <summary>
         /// ;<br/>
         /// <i>2 bytes</i>;
@@ -117,7 +127,7 @@ namespace LacpSniffer.Data.Models
         /// <summary>
         /// 
         /// </summary>
-        public byte CollectorTlvType;
+        public byte CollectorTlv;
         public byte CollectorInformationLength;
         /// <summary>
         /// ;<br/>
@@ -129,22 +139,78 @@ namespace LacpSniffer.Data.Models
         /// <i>12 bytes</i>;
         /// </summary>
         public byte[] CollectorReserved;
-        public byte TerminatorTlvType;
+        public byte TerminatorTlv;
         public byte TerminatorLength;
         /// <summary>
         /// ;<br/>
         /// <i>50 bytes</i>;
         /// </summary>
         public byte[] Reserved;
-        /// <summary>
-        /// ;<br/>
-        /// <i>4 bytes</i>;
-        /// </summary>
-        public byte[] FCS;
+
+        public readonly string FullInfoAsString
+            => $"LACP Packet\n\t"
+            + $"Source MAC-address: {SourceMacAddress.ToMacAddressString()}\n\t"
+            + $"LACP version: {VersionNumber:x2}\n\t"
+            + $"Actor TLV: {ActorTlv:x2}\n\t"
+            + $"Actor system priority: {ActorSystemPriority.ToHexString()}\n\t"
+            + $"Actor system address: {ActorSystemMacAddress.ToMacAddressString()}\n\t"
+            + $"Actor key: {ActorKey.ToHexString()}\n\t"
+            + $"Actor port priority: {ActorPortPriority.ToHexString()}\n\t"
+            + $"Actor port: {ActorPort.ToHexString()}\n\t"
+            + $"Actor state: {ActorState} [{Convert.ToString(ActorState, 2).PadLeft(8, '0')}]\n\t\t"
+            + $"{ActorState.ToLacpPortState("\n\t\t")}\n\t"
+            + $"Actor reversed: {ActorReserved.ToHexString()}\n\t"
+            + $"Partner TLV: {PartnerTlv:x2}\n\t"
+            + $"Partner system priority: {PartnerSystemPriority.ToHexString()}\n\t"
+            + $"Partner system address: {PartnerSystemMacAddress.ToMacAddressString()}\n\t"
+            + $"Partner key: {PartnerKey.ToHexString()}\n\t"
+            + $"Partner port priority: {PartnerPortPriority.ToHexString()}\n\t"
+            + $"Partner port: {PartnerPort.ToHexString()}\n\t"
+            + $"Partner state: {PartnerState} [{Convert.ToString(PartnerState, 2).PadLeft(8, '0')}]\n\t\t"
+            + $"{PartnerState.ToLacpPortState("\n\t\t")}\n\t"
+            + $"Partner reversed: {PartnerReserved.ToHexString()}\n\t"
+            + $"Collector TLV: {CollectorTlv:x2}\n\t"
+            + $"Collector max delay: {CollectorMaxDelay.ToHexString()}\n\t"
+            + $"Collector reserved: {CollectorReserved.ToHexString()}\n\t"
+            + $"Terminator TLV: {TerminatorTlv:x2}\n\t"
+            + $"Terminator length: {TerminatorTlv:x2}\n\t"
+            + $"Reserved: {CollectorReserved.ToHexString()}"
+            ;
 
         /// <summary>
         /// Usual constructor
         /// </summary>
+        /// <param name="destinationMacAddress">MAC-address of paceket reciever <c>6 bytes; Ethernet2</c></param>
+        /// <param name="sourceMacAddress">MAC-address of paceket sender <c>6 bytes; Ethernet2</c></param>
+        /// <param name="length_type">Packet Length/Type <c>Const value - 0x8809; 2 bytes; Ethernet2</c></param>
+        /// <param name="subtype">Packet subtype <c>Const value - 0x01; LACPDU</c></param>
+        /// <param name="versionNumber">LACP version number</param>
+        /// <param name="actorTlvType"></param>
+        /// <param name="actorInformationLength"></param>
+        /// <param name="actorSystemPriority"></param>
+        /// <param name="actorSystem"></param>
+        /// <param name="actorKey"></param>
+        /// <param name="actorPortPriority"></param>
+        /// <param name="actorPort"></param>
+        /// <param name="actorState"></param>
+        /// <param name="actorReserved"></param>
+        /// <param name="partnerTlvType"></param>
+        /// <param name="partnerInformationLength"></param>
+        /// <param name="partnerSystemPriority"></param>
+        /// <param name="partnerSystem"></param>
+        /// <param name="partnerKey"></param>
+        /// <param name="partnerPortPriority"></param>
+        /// <param name="partnerPort"></param>
+        /// <param name="partnerState"></param>
+        /// <param name="partnerReserved"></param>
+        /// <param name="collectorTlvType"></param>
+        /// <param name="collectorInformationLength"></param>
+        /// <param name="collectorMaxDelay"></param>
+        /// <param name="collectorReserved"></param>
+        /// <param name="terminatorTlvType"></param>
+        /// <param name="terminatorLength"></param>
+        /// <param name="reserved"></param>
+        /// <param name="fcs"></param>
         public LacpPacket(byte[] destinationMacAddress, byte[] sourceMacAddress, byte[] length_type, byte subtype,
                           byte versionNumber, byte actorTlvType, byte actorInformationLength, byte[] actorSystemPriority,
                           byte[] actorSystem, byte[] actorKey, byte[] actorPortPriority, byte[] actorPort,
@@ -152,40 +218,38 @@ namespace LacpSniffer.Data.Models
                           byte[] partnerSystemPriority, byte[] partnerSystem, byte[] partnerKey,
                           byte[] partnerPortPriority, byte[] partnerPort, byte partnerState, byte[] partnerReserved,
                           byte collectorTlvType, byte collectorInformationLength, byte[] collectorMaxDelay,
-                          byte[] collectorReserved, byte terminatorTlvType, byte terminatorLength, byte[] reserved,
-                          byte[] fcs)
+                          byte[] collectorReserved, byte terminatorTlvType, byte terminatorLength, byte[] reserved)
         {
             DestinationMacAddress = destinationMacAddress;
             SourceMacAddress = sourceMacAddress;
-            Length_Type = length_type;
+            TypeLength = length_type;
             Subtype = subtype;
             VersionNumber = versionNumber;
-            ActorTlvType = actorTlvType;
+            ActorTlv = actorTlvType;
             ActorInformationLength = actorInformationLength;
             ActorSystemPriority = actorSystemPriority;
-            ActorSystem = actorSystem;
+            ActorSystemMacAddress = actorSystem;
             ActorKey = actorKey;
             ActorPortPriority = actorPortPriority;
             ActorPort = actorPort;
             ActorState = actorState;
             ActorReserved = actorReserved;
-            PartnerTlvType = partnerTlvType;
+            PartnerTlv = partnerTlvType;
             PartnerInformationLength = partnerInformationLength;
             PartnerSystemPriority = partnerSystemPriority;
-            PartnerSystem = partnerSystem;
+            PartnerSystemMacAddress = partnerSystem;
             PartnerKey = partnerKey;
             PartnerPortPriority = partnerPortPriority;
             PartnerPort = partnerPort;
             PartnerState = partnerState;
             PartnerReserved = partnerReserved;
-            CollectorTlvType = collectorTlvType;
+            CollectorTlv = collectorTlvType;
             CollectorInformationLength = collectorInformationLength;
             CollectorMaxDelay = collectorMaxDelay;
             CollectorReserved = collectorReserved;
-            TerminatorTlvType = terminatorTlvType;
+            TerminatorTlv = terminatorTlvType;
             TerminatorLength = terminatorLength;
             Reserved = reserved;
-            FCS = fcs;
         }
 
         /// <summary>
@@ -195,35 +259,40 @@ namespace LacpSniffer.Data.Models
         {
             SourceMacAddress = new byte[6];
             DestinationMacAddress = new byte[6];
-            Length_Type = new byte[2];
+            TypeLength = new byte[2];
             Subtype = 0;
             VersionNumber = 0;
-            ActorTlvType = 0;
+            ActorTlv = 0;
             ActorInformationLength = 0;
             ActorSystemPriority = new byte[2];
-            ActorSystem = new byte[6];
+            ActorSystemMacAddress = new byte[6];
             ActorKey = new byte[6];
             ActorPortPriority = new byte[2];
             ActorPort = new byte[6];
             ActorState = 0;
             ActorReserved = new byte[3];
-            PartnerTlvType = 0;
+            PartnerTlv = 0;
             PartnerInformationLength = 0;
             PartnerSystemPriority = new byte[2];
-            PartnerSystem = new byte[6];
+            PartnerSystemMacAddress = new byte[6];
             PartnerKey = new byte[6];
             PartnerPortPriority = new byte[2];
             PartnerPort = new byte[6];
             PartnerState = 0;
             PartnerReserved = new byte[3];
-            CollectorTlvType = 0;
+            CollectorTlv = 0;
             CollectorInformationLength = 0;
             CollectorMaxDelay = new byte[4];
             CollectorReserved = new byte[12];
-            TerminatorTlvType = 0;
+            TerminatorTlv = 0;
             TerminatorLength = 0;
             Reserved = new byte[50];
-            FCS = new byte[4];
         }
+
+        public override readonly string ToString()
+            => $"LACP Packet {{ Dest: {DestinationMacAddress.ToMacAddressString()}"
+                + $"; Src: {SourceMacAddress.ToMacAddressString()}"
+                + $"; Type/Length: {TypeLength}"
+                + $"; Version: {VersionNumber:x2}; }}";
     }
 }
