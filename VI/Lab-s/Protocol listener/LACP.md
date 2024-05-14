@@ -10,6 +10,8 @@
 
 **Размерность:** Объединение, до 8 активных физических каналов, и 8 резервных (В ожидании)
 
+**Тип:** 0x8809
+
 ## Требования к использованию LACP
 
 - Каналы должны быть одинаково настроены;
@@ -78,3 +80,9 @@
 - [LearnDuty. LACP Port Channel Explained (Link Aggregation Deep Dive)](https://learnduty.com/network-techs/lacp-port-channel-explained-link-aggregation-deep-dive/);
 - [Nag wiki. LACP и агрегация портов](https://nag.wiki/pages/viewpage.action?pageId=25108332);
 - [Carrier Sense Multiple Access with Collision Detection (CSMA/CD) access method and physical layer specifications](http://magrawal.myweb.usf.edu/dcom/Ch3_802.3-2005_section3.pdf)
+
+### LACPDU из Cisco Packet Tracer
+
+![LACPDU из Cisco Packet Tracer](image.png)
+
+![LACPDU из Wireshark](image-1.png)
