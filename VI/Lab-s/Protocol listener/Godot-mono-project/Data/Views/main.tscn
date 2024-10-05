@@ -1,0 +1,63 @@
+[gd_scene load_steps=2 format=3 uid="uid://kpfqs8pdf4l0"]
+
+[ext_resource type="Script" path="res://Data/Controllers/MainViewController.cs" id="1_gwvdx"]
+
+[node name="Main" type="Control" node_paths=PackedStringArray("PacketsOutput", "PacketOutput", "StartStopListenningButton")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gwvdx")
+PacketsOutput = NodePath("MarginContainer/VBoxContainer/Packets output")
+PacketOutput = NodePath("MarginContainer/VBoxContainer/ScrollContainer/Packet info")
+StartStopListenningButton = NodePath("MarginContainer/VBoxContainer/HBoxContainer/Start-End listen")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Packets output" type="ItemList" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+allow_reselect = true
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.5
+
+[node name="Packet info" type="RichTextLabel" parent="MarginContainer/VBoxContainer/ScrollContainer"]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+tab_size = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 16
+
+[node name="Start-End listen" type="Button" parent="MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Начать слушать
+"
+
+[connection signal="empty_clicked" from="MarginContainer/VBoxContainer/Packets output" to="." method="OnPacketDeselected"]
+[connection signal="item_selected" from="MarginContainer/VBoxContainer/Packets output" to="." method="OnPacketSelected"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start-End listen" to="." method="OnStartStopSnifferingButtonPressed"]
