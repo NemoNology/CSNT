@@ -1,7 +1,3 @@
-using System;
-using System.Linq;
-using LACPsniffer.Data.Models;
-
 namespace LacpSniffer.Data.Models
 {
     /// <summary>
@@ -19,7 +15,6 @@ namespace LacpSniffer.Data.Models
         /// LACP packets are sent with multicast group MAC-address 01:80:C2:00:00:02
         /// </summary>
         public static readonly byte[] LacpDestinationAddress = new byte[6] { 0x01, 0x80, 0xC2, 0x00, 0x00, 0x02 };
-
 
         /// <summary>
         /// Destination MAC-address;<br/>
@@ -174,14 +169,15 @@ namespace LacpSniffer.Data.Models
             + $"Collector reserved: {CollectorReserved.ToHexString()}\n\t"
             + $"Terminator TLV: {TerminatorTlv:x2}\n\t"
             + $"Terminator length: {TerminatorTlv:x2}\n\t"
-            + $"Reserved: {CollectorReserved.ToHexString()}"
+            + $"Reserved: {Reserved.ToHexString()}\n\t"
+            + $"(Packet length: {LENGTH - 50 + Reserved.Length})"
             ;
 
         /// <summary>
         /// Usual constructor
         /// </summary>
-        /// <param name="destinationMacAddress">MAC-address of paceket reciever <c>6 bytes; Ethernet2</c></param>
-        /// <param name="sourceMacAddress">MAC-address of paceket sender <c>6 bytes; Ethernet2</c></param>
+        /// <param name="destinationMacAddress">MAC-address of packet receiver <c>6 bytes; Ethernet2</c></param>
+        /// <param name="sourceMacAddress">MAC-address of packet sender <c>6 bytes; Ethernet2</c></param>
         /// <param name="length_type">Packet Length/Type <c>Const value - 0x8809; 2 bytes; Ethernet2</c></param>
         /// <param name="subtype">Packet subtype <c>Const value - 0x01; LACPDU</c></param>
         /// <param name="versionNumber">LACP version number</param>
