@@ -13,7 +13,8 @@ byte[] GetRandomLacpPacketBytes()
     bytesList.AddRange([0x01, 0x80, 0xC2, 0x00, 0x00, 0x02]);
     bytesList.AddRange(rndBytes(6));
     bytesList.AddRange([0x88, 0x09, 0x01]);
-    bytesList.AddRange(rndBytes(109));
+    // Generate random packet length
+    bytesList.AddRange(rndBytes(rnd.Next(109, 500)));
     return [.. bytesList];
 }
 
@@ -21,36 +22,36 @@ uint delayMilliseconds = 1000;
 uint packetsCount = 7;
 switch (args.Length)
 {
-	case 1:
-		_ = uint.TryParse(args[0], out delayMilliseconds);
-		break;
-	case 2:
-		_ = uint.TryParse(args[1], out packetsCount);
-		break;
-	default: break;
+    case 1:
+        _ = uint.TryParse(args[0], out delayMilliseconds);
+        break;
+    case 2:
+        _ = uint.TryParse(args[1], out packetsCount);
+        break;
+    default: break;
 }
 
 Console.WriteLine($"Started sending packets [ Delay: {delayMilliseconds} ms; Packets amount: {packetsCount} ]");
 
 while (true)
 {
-	int sendedPacketsCount = 0;
+    int sendedPacketsCount = 0;
     foreach (var device in CaptureDeviceList.Instance)
     {
-		try
+        try
         {
-			if (sendedPacketsCount == packetsCount)
-			{
-				Console.WriteLine($"Ended sending;\nSuccessfully sended {packetsCount} packets;");
-				return;
-			}
-			
+            if (sendedPacketsCount == packetsCount)
+            {
+                Console.WriteLine($"Ended sending;\nSuccessfully sended {packetsCount} packets;");
+                return;
+            }
+
             device.Open();
             device.SendPacket(GetRandomLacpPacketBytes());
             Console.WriteLine(
                 $"Sended packet on {device.Name} ({device.Description})");
             device.Close();
-			sendedPacketsCount++;
+            sendedPacketsCount++;
 
             Thread.Sleep((int)delayMilliseconds);
         }
