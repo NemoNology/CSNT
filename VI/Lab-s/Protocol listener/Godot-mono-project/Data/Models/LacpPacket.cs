@@ -169,8 +169,7 @@ namespace LacpSniffer.Data.Models
             + $"Collector reserved: {CollectorReserved.ToHexString()}\n\t"
             + $"Terminator TLV: {TerminatorTlv:x2}\n\t"
             + $"Terminator length: {TerminatorTlv:x2}\n\t"
-            + $"Reserved: {Reserved.ToHexString()}\n\t"
-            + $"(Packet length: {LENGTH - 50 + Reserved.Length})"
+            + $"Reserved: {Reserved.ToHexString()}"
             ;
 
         /// <summary>
