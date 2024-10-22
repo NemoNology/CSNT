@@ -38,10 +38,10 @@ namespace CSNT.Clientserverchat.Data.Models
                 EndPoint clientEndPoint;
                 while (_isRunning)
                 {
-                    // Start listenning
+                    // Start listening
                     clientEndPoint = new IPEndPoint(IPAddress.Any, port);
-                    var recievedBytesLength = _socket.ReceiveFrom(buffer, ref clientEndPoint);
-                    var recievedBytes = buffer[..recievedBytesLength];
+                    var receivedBytesLength = _socket.ReceiveFrom(buffer, ref clientEndPoint);
+                    var receivedBytes = buffer[..receivedBytesLength];
                     bool isNewClient = !_clientsEndPoints.Contains(clientEndPoint);
 
                     // Check if it's new client
@@ -65,7 +65,7 @@ namespace CSNT.Clientserverchat.Data.Models
                     lock (_messagesBytes)
                     {
                         var isSpecialMessage = Enumerable.SequenceEqual(
-                            recievedBytes, NetHelper.SpecialMessageBytes);
+                            receivedBytes, NetHelper.SpecialMessageBytes);
                         if (!isNewClient && isSpecialMessage)
                         {
                             _messagesBytes.Add(Encoding.UTF8.GetBytes(
@@ -80,7 +80,7 @@ namespace CSNT.Clientserverchat.Data.Models
                         else if (!isSpecialMessage)
                         {
                             _messagesBytes.Add(Encoding.UTF8.GetBytes(
-                                GetClientFormattedMessage(clientEndPoint, recievedBytes)));
+                                GetClientFormattedMessage(clientEndPoint, receivedBytes)));
 
                             SendLastMessageToClients();
                         }

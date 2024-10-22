@@ -25,7 +25,7 @@ namespace CSNT.Clientserverchat.Data.Models
             _socket.Bind(new IPEndPoint(clientIpAddress, clientPort));
             _socket.Connect(new IPEndPoint(serverIpAddress, serverPort));
             State = ClientState.Connecting;
-            // Thread for recieving messages
+            // Thread for receiving messages
             Task.Run(() =>
             {
                 byte[] buffer = new byte[NetHelper.BUFFERSIZE];
@@ -40,14 +40,14 @@ namespace CSNT.Clientserverchat.Data.Models
                         break;
                     }
                 }
-                // If connected -> start listenning
+                // If connected -> start listening
                 while (_state == ClientState.Connected)
                 {
-                    int recievedBytesLength = _socket.Receive(buffer);
-                    byte[] recievedBytes = buffer[..recievedBytesLength];
-                    MessageReceived?.Invoke(recievedBytes);
-                    // If special message recieved => server is closing, client needs to disconnect
-                    if (Enumerable.SequenceEqual(recievedBytes, NetHelper.SpecialMessageBytes))
+                    int receivedBytesLength = _socket.Receive(buffer);
+                    byte[] receivedBytes = buffer[..receivedBytesLength];
+                    MessageReceived?.Invoke(receivedBytes);
+                    // If special message received => server is closing, client needs to disconnect
+                    if (Enumerable.SequenceEqual(receivedBytes, NetHelper.SpecialMessageBytes))
                     {
                         Disconnect(true);
                         return;

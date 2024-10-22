@@ -49,7 +49,7 @@ namespace CSNT.Clientserverchat.Data.Controllers
 
             PrintErrorMessage("");
             _server = isUdp ? new ServerUdp() : new ServerTcp();
-            _server.MessageReceived += OnMessageRecievedDeferred;
+            _server.MessageReceived += OnMessageReceivedDeferred;
             _server.StateChanged += OnServerStateChangedDeferred;
 
             try
@@ -72,7 +72,7 @@ namespace CSNT.Clientserverchat.Data.Controllers
             CallDeferred(nameof(OnServerStateChanged), isRunning);
         }
 
-        private void OnMessageRecievedDeferred(byte[] messageBytes)
+        private void OnMessageReceivedDeferred(byte[] messageBytes)
         {
             CallDeferred(nameof(AddMessageToOutput), messageBytes);
         }
@@ -95,7 +95,7 @@ namespace CSNT.Clientserverchat.Data.Controllers
         private void OnStopServerButtonPressed()
         {
             _server.Stop();
-            _server.MessageReceived -= OnMessageRecievedDeferred;
+            _server.MessageReceived -= OnMessageReceivedDeferred;
             _server.StateChanged -= OnServerStateChangedDeferred;
             CallDeferred(nameof(ClearMessages));
         }

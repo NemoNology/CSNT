@@ -68,7 +68,7 @@ namespace CSNT.Clientserverchat.Data.Controllers
             }
 
             _client = isUdp ? new ClientUdp() : new ClientTcp();
-            _client.MessageReceived += OnMessageRecievedDeferred;
+            _client.MessageReceived += OnMessageReceivedDeferred;
             _client.StateChanged += OnClientStateChangedDeferred;
 
             try
@@ -87,7 +87,7 @@ namespace CSNT.Clientserverchat.Data.Controllers
             CallDeferred(nameof(OnClientStateChanged), (int)state);
         }
 
-        private void OnMessageRecievedDeferred(byte[] messageBytes)
+        private void OnMessageReceivedDeferred(byte[] messageBytes)
         {
             if (Enumerable.SequenceEqual(messageBytes, NetHelper.SpecialMessageBytes))
             {
@@ -124,7 +124,7 @@ namespace CSNT.Clientserverchat.Data.Controllers
         private void OnDisconnectButtonPressed()
         {
             _client.Disconnect();
-            _client.MessageReceived -= OnMessageRecievedDeferred;
+            _client.MessageReceived -= OnMessageReceivedDeferred;
             _client.StateChanged -= OnClientStateChangedDeferred;
             CallDeferred(nameof(ClearMessages));
         }

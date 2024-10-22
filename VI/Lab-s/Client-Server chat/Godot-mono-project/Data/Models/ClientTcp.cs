@@ -23,22 +23,22 @@ namespace CSNT.Clientserverchat.Data.Models
                 return;
 
             _socket.Bind(new IPEndPoint(clientIpAddress, clientPort));
-            // Connectiong to server
+            // Connecting to server
             State = ClientState.Connecting;
             _socket.Connect(new IPEndPoint(serverIpAddress, serverPort));
             State = ClientState.Connected;
-            // Thread for connection and recieving messages
+            // Thread for connection and receiving messages
             Task.Run(() =>
             {
                 byte[] buffer = new byte[4096];
-                // Start recieve messages
+                // Start receive messages
                 while (_state == ClientState.Connected)
                 {
-                    int recievedBytesLength = _socket.Receive(buffer);
-                    byte[] recievedBytes = buffer[..recievedBytesLength];
-                    MessageReceived?.Invoke(recievedBytes);
+                    int receivedBytesLength = _socket.Receive(buffer);
+                    byte[] receivedBytes = buffer[..receivedBytesLength];
+                    MessageReceived?.Invoke(receivedBytes);
                     // If message is special - server closing, so client needs to disconnect
-                    if (Enumerable.SequenceEqual(recievedBytes, NetHelper.SpecialMessageBytes))
+                    if (Enumerable.SequenceEqual(receivedBytes, NetHelper.SpecialMessageBytes))
                     {
                         Disconnect(true);
                         return;
@@ -51,7 +51,6 @@ namespace CSNT.Clientserverchat.Data.Models
         {
             if (_state == ClientState.Disconnected)
                 return;
-
 
             SendMessage();
             _cancellationTokenSource.CancelAfter(1000);
