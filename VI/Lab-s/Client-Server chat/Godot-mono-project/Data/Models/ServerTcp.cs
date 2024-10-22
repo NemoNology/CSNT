@@ -59,17 +59,17 @@ namespace CSNT.Clientserverchat.Data.Models
                     // Notify about new client
                     SendLastMessageToClients();
 
-                    // Start recieve messages from connected client in another thread
+                    // Start receive messages from connected client in another thread
                     Task.Run(() =>
                     {
                         byte[] buffer = new byte[NetHelper.BUFFERSIZE];
-                        int recievedBytesLength;
+                        int receivedBytesLength;
                         while (clientSocket.Connected)
                         {
-                            recievedBytesLength = clientSocket.Receive(buffer);
-                            var recievedBytes = buffer[..recievedBytesLength];
+                            receivedBytesLength = clientSocket.Receive(buffer);
+                            var receivedBytes = buffer[..receivedBytesLength];
 
-                            if (Enumerable.SequenceEqual(recievedBytes, NetHelper.SpecialMessageBytes))
+                            if (Enumerable.SequenceEqual(receivedBytes, NetHelper.SpecialMessageBytes))
                             {
                                 lock (_clientsSockets)
                                     _clientsSockets.Remove(clientSocket);
@@ -84,7 +84,7 @@ namespace CSNT.Clientserverchat.Data.Models
                             {
                                 _messagesBytes.Add(Encoding.UTF8.GetBytes(
                                     GetClientFormattedMessage(
-                                        clientSocket.RemoteEndPoint, buffer[..recievedBytesLength])
+                                        clientSocket.RemoteEndPoint, buffer[..receivedBytesLength])
                                     ));
                             }
 
@@ -130,9 +130,13 @@ namespace CSNT.Clientserverchat.Data.Models
                     lock (socket)
                     {
                         if (socket.SafeHandle.IsClosed || !socket.Connected)
+                        {
+                            _clientsSockets.Remove(socket);
                             continue;
+                        }
 
                         socket.Send(_messagesBytes[^1]);
+                        socket.Close();
                     }
                 }
             }
