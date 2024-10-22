@@ -39,7 +39,7 @@ namespace LacpSniffer.Data.Models
                 bytes[60..72],
                 bytes[72],
                 bytes[73],
-                bytes[74..]
+                bytes[74..124]
             );
         }
 
