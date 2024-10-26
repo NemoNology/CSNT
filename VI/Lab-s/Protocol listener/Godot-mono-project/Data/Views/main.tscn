@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Data/Controllers/MainViewController.cs" id="1_gwvdx"]
 
-[node name="Main" type="Control" node_paths=PackedStringArray("PacketsOutput", "PacketOutput", "StartStopListenningButton")]
+[node name="Main" type="Control" node_paths=PackedStringArray("PacketsOutput", "PacketOutput", "StartStopListeningButton")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,7 +12,7 @@ grow_vertical = 2
 script = ExtResource("1_gwvdx")
 PacketsOutput = NodePath("MarginContainer/VBoxContainer/Packets output")
 PacketOutput = NodePath("MarginContainer/VBoxContainer/ScrollContainer/Packet info")
-StartStopListenningButton = NodePath("MarginContainer/VBoxContainer/HBoxContainer/Start-End listen")
+StartStopListeningButton = NodePath("MarginContainer/VBoxContainer/HBoxContainer/Start-End listen")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -60,4 +60,4 @@ text = "Начать слушать
 
 [connection signal="empty_clicked" from="MarginContainer/VBoxContainer/Packets output" to="." method="OnPacketDeselected"]
 [connection signal="item_selected" from="MarginContainer/VBoxContainer/Packets output" to="." method="OnPacketSelected"]
-[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start-End listen" to="." method="OnStartStopSnifferingButtonPressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/HBoxContainer/Start-End listen" to="." method="OnStartStopListeningButtonPressed"]
