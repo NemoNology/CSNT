@@ -3,6 +3,7 @@ global using System.Collections.Generic;
 global using System.Linq;
 global using Godot;
 global using LacpSniffer.Data.Models;
+using LACPsniffer.Data.Models;
 using SharpPcap;
 namespace LacpSniffer.Data.Controllers;
 
@@ -10,7 +11,8 @@ public partial class MainViewController : Control
 {
 	private bool _isListening = false;
 	private int _previousPacketIndex = -1;
-	private readonly List<LacpPacket> _packets = new(10);
+	private readonly List<Lacpdu> _packets = new(10);
+	private readonly ILiveDevice _networkInterfaceDevice;
 
 	[ExportCategory("Sniffer")]
 	[Export]
@@ -20,27 +22,29 @@ public partial class MainViewController : Control
 	[Export]
 	public Button StartStopListeningButton { get; set; }
 
+	public MainViewController()
+	{
+		_networkInterfaceDevice = CaptureDeviceList
+		.Instance
+		.Where(d => d.Name == "\\Device\\NPF_{9D3F39FF-B9C3-4C72-815B-7C1A82202756}")
+		.First();
+	}
+
 	private void OnStartStopListeningButtonPressed()
 	{
 		if (_isListening)
 		{
-			foreach (var device in CaptureDeviceList.Instance)
-			{
-				device.StopCapture();
-				device.OnPacketArrival -= OnPacketArrival;
-				device.Close();
-			}
+			_networkInterfaceDevice.StopCapture();
+			_networkInterfaceDevice.OnPacketArrival -= OnPacketArrival;
+			_networkInterfaceDevice.Close();
 		}
 		else
 		{
 			PacketsOutput.Clear();
 			_packets.Clear();
-			foreach (var device in CaptureDeviceList.Instance)
-			{
-				device.Open();
-				device.OnPacketArrival += OnPacketArrival;
-				device.StartCapture();
-			}
+			_networkInterfaceDevice.Open();
+			_networkInterfaceDevice.OnPacketArrival += OnPacketArrival;
+			_networkInterfaceDevice.StartCapture();
 		}
 		_isListening = !_isListening;
 		StartStopListeningButton.Text = (_isListening ? "Закончить" : "Начать") + " слушать";
@@ -49,15 +53,10 @@ public partial class MainViewController : Control
 	private void OnPacketArrival(object sender, PacketCapture e)
 	{
 		var bytes = e.Data.ToArray();
-		bool isLacp = bytes.IsLacpPacket();
-		if (isLacp)
+		if (Lacpdu.TryParse(bytes, out Lacpdu? lacpdu))
 		{
-			var packet = bytes.ToLacpPacket();
-			if (_packets.Contains(packet))
-				return;
-
-			AddItemToPacketsItems(packet.ToString());
-			_packets.Add(packet);
+			AddItemToPacketsItems(lacpdu.ToString());
+			_packets.Add((Lacpdu)lacpdu);
 		}
 	}
 
@@ -88,7 +87,7 @@ public partial class MainViewController : Control
 		else
 		{
 			_previousPacketIndex = index;
-			SetPacketOutputText(_packets[index].FullInfoAsString);
+			SetPacketOutputText(_packets[index].FullInfo);
 		}
 	}
 
