@@ -10,11 +10,30 @@ byte[] GetRandomLacpPacketBytes()
         return bytes;
     }
     List<byte> bytesList = new(128);
+    // Destination MAC
     bytesList.AddRange([0x01, 0x80, 0xC2, 0x00, 0x00, 0x02]);
+    // Source MAC
     bytesList.AddRange(rndBytes(6));
+    // Type\Length of slow protocol + subtype
     bytesList.AddRange([0x88, 0x09, 0x01]);
-    // Generate random packet length
-    bytesList.AddRange(rndBytes(rnd.Next(109, 500)));
+    // Random version
+    bytesList.AddRange(rndBytes(1));
+
+    // Random TLVs
+    for (int i = 0; i < rnd.Next(0, 5); i++)
+    {
+        // Random tag value in TLV from 0 to 5
+        bytesList.Add((byte)rnd.Next(0, 6));
+        // Random length
+        var length = (byte)rnd.Next(0, 255);
+        bytesList.Add(length);
+        // Random content
+        if (DateTime.Now.Millisecond % 2 == 0)
+            bytesList.AddRange(rndBytes(rnd.Next(0, 500)));
+        else
+            bytesList.AddRange(rndBytes(length));
+    }
+
     return [.. bytesList];
 }
 
@@ -33,33 +52,34 @@ switch (args.Length)
 
 Console.WriteLine($"Started sending packets [ Delay: {delayMilliseconds} ms; Packets amount: {packetsCount} ]");
 
-while (true)
+for (int i = 0; i < packetsCount; i++)
 {
+    var device = CaptureDeviceList
+        .Instance
+        .Where(d => d.Name == "\\Device\\NPF_{9D3F39FF-B9C3-4C72-815B-7C1A82202756}")
+        .First();
     int sendedPacketsCount = 0;
-    foreach (var device in CaptureDeviceList.Instance)
+    try
     {
-        try
+        if (sendedPacketsCount == packetsCount)
         {
-            if (sendedPacketsCount == packetsCount)
-            {
-                Console.WriteLine($"Ended sending;\nSuccessfully sended {packetsCount} packets;");
-                return;
-            }
-
-            device.Open();
-            device.SendPacket(GetRandomLacpPacketBytes());
-            Console.WriteLine(
-                $"Sended packet on {device.Name} ({device.Description})");
-            device.Close();
-            sendedPacketsCount++;
-
-            Thread.Sleep((int)delayMilliseconds);
+            Console.WriteLine($"Ended sending;\nSuccessfully sended {packetsCount} packets;");
+            return;
         }
-        catch (Exception e)
-        {
-            Console.WriteLine(
-                $"Error when sending packet on {device.Name} ({device.Description}):\n\t{e.Message}");
-            device.Close();
-        }
+
+        device.Open();
+        device.SendPacket(GetRandomLacpPacketBytes());
+        Console.WriteLine(
+            $"Sended packet on ({device.Description})");
+        device.Close();
+        sendedPacketsCount++;
+
+        Thread.Sleep((int)delayMilliseconds);
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine(
+            $"Error when sending packet on {device.Name} ({device.Description}):\n\t{e.Message}");
+        device.Close();
     }
 }
