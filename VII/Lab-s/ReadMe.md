@@ -1,0 +1,1 @@
+Used version of Cisco Packet Tracer: 8.2.1
