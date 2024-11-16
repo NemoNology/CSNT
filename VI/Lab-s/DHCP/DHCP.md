@@ -169,9 +169,24 @@ Got answer from: 192.168.1.1
 
 ## 11. Моделирование DHCP опций
 
-| Option | Name  |
-| :----: | :---: |
-
+| Option | Name                   |
+| :----- | :--------------------- |
+| 1      | Subnet mask            |
+| 3      | Router                 |
+| 6      | Name server            |
+| 12     | Host name              |
+| 23     | Default IP TTL         |
+| 26     | Interface MTU          |
+| 33     | Static IP route        |
+| 35     | ARP cache timeout      |
+| 50     | Requested IP address   |
+| 55     | Parameter request list |
+| 61     | Client identifier      |
+| 66     | TFTP server name       |
+| 82     | Option 82              |
+| 121    | Classless route        |
+| 150    | TFTP server IP address |
+| 255    | End                    |
 
 # Используемые материалы
 
