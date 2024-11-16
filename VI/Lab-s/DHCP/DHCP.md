@@ -30,17 +30,29 @@ R1(dhcp-config)#dns-server 1.1.1.1 77.88.8.8 8.8.8.8
 
 ### DHCP discover -> DHCP offer
 
+Для того, чтобы обнаружить dhcp-сервер в сети, dhcp-клиент отправляет сообщение обнаружения (`DISCOVER`) на *broadcast*  MAC и IP адреса по UDP порту 68 на порт 67. DHCP-сервер в ответ отправляет предложение адреса (`OFFER`) по *unicast* и UDP порту 67 на порт 68, с предлагаемым адресом клиенту по UDP.
+
 ![dhcp discover](image-1.png)
 ![dhcp offer](image-2.png)
 
 ### DHCP request -> DHCP acknowledgement
 
+На предложение клиент отвечает запросом (`REQUEST`) или отказом от предложения (`DECLINE`). В случае `REQUEST`, сервер отвечает `ACKNOWLEDGEMENT` (`ACK`) или `NEGATIVE ACKNOWLEDGEMENT` (`NAK`), в случае отказа выдачи запрошенного клиентом адреса.
+
 ![dhcp request](image-3.png)
 ![dhcp acknowledgement](image-4.png)
+
+Когда сервер посылает `ACKNOWLEDGEMENT`, завершается цикл `DORA`, названный в честь первых букв указанных выше *успешных* сообщений. А завершение этого цикла означает успешное получение адреса.
+
+*Также есть сообщения из группы `RIND` - `RELEASE`, `INFORM`, `NEGATIVE ACKNOWLEDGEMENT` и `DECLINE`*.
 
 ## 3. Проследить цепочки DHCP после отправки сообщения DHCP release. Отдельно отследить DHCP сообщения после выполнения команды `Renew`
 
 ### DHCP release
+
+> DHCPRELEASE - Клиент сообщает серверу об освобождении сетевого адреса и отказе от аренды. [3]
+
+`PC1> dhcp -x`
 
 ![DHCP release](image-5.png)
 
@@ -48,23 +60,98 @@ R1(dhcp-config)#dns-server 1.1.1.1 77.88.8.8 8.8.8.8
 
 В отличии от обычного DHCP discover, в данном случае присутствует опция № 50, запрошенного IP-адреса, который раннее был выдан DHCP-клиенту.
 
+`PC1> dhcp -r`
+
 ![DHCP. Renew. Discover](image-6.png)
 
 В остальном (offer, request, acknowledgement) сообщения не отличаются от первичной выдачи адреса.
 
 ## 4. Проанализировать сообщения DHCPINFORM при разных конфигурациях DHCP сервера
 
-TODO: попроси помощи у коллег;
+> `DHCPINFORM`Клиент запрашивает у сервера только конфигурационные параметры, поскольку уже имеет сетевой адрес, заданный другим способом. [3]
+
+### Попытка с использованием `udhcpc` на `Alpine Linux`
+
+```
+/ # udhcpc --help
+Usage: udhcpc ...
+
+        ...
+
+        -o              Don't request any options (unless -O is given)
+        -O OPT          Request option OPT from server (cumulative)
+        -x OPT:VAL      Include option OPT in sent packets (cumulative)
+                        Examples of string, numeric, and hex byte opts:
+                        -x hostname:bbox - option 12
+                        -x lease:3600 - option 51 (lease time)
+                        -x 0x3d:0100BEEFC0FFEE - option 61 (client id)
+                        -x 14:'"dumpfile"' - option 14 (shell-quoted)
+
+        ...
+
+/ # udhcpc -o -x 53:8
+udhcpc: started, v1.36.1
+udhcpc: broadcasting discover
+udhcpc: broadcasting select for 192.168.1.9, server 192.168.1.1
+udhcpc: lease of 192.168.1.9 obtained from 192.168.1.1, lease time 36000 
+```
+
+Итог
+
+![DORA, вместо DHCPINFORM](image-7.png)
+
+### Попытка с использованием `ipconfig` на `Windows 10`
+
+```
+PS C:\Users\NemoNology> ipconfig /setclassid “Ethernet” DHCPINFORM
+
+Настройка протокола IP для Windows
+
+Код класса DHCPv4 для адаптера Ethernet успешно установлен.
+```
+
+![ipconfig /setclassid “Ethernet” DHCPINFORM](image-8.png)
+
+Наличие опции под кодом `77`, которого нет в RFC 2132, подтверждает, что `ipconfig` использует расширения DHCP.
+
+#### Использование UDP сокета на Python3 с байтами, основанными на байтах показанного выше пакета
+
+![DHCP INFORM by Python3 UDP socket](image-13.png)
+![DHCP ACK for DHCP INFORM](image-14.png)
+
+### Попытка с использованием `dhcping` на `Alpine Linux`
+
+```
+/ # dhcping -c 192.168.1.2 -s 192.168.1.1 -i
+Got answer from: 192.168.1.1
+```
+
+![DHCP INFORM](image-11.png)
+![DHCP ACK как ответ на DHCP INFORM](image-12.png)
 
 ## 5. Смоделировать ситуации для генерации сообщения DHCPNACK
 
-### a. Занятый адрес
+> `DHCPNAK` - Сервер сообщает клиенту о непригодности указанного тем сетевого адреса (например, при переносе клиента в другую подсеть) или окончании аренды для этого клиента. [3]
 
-TODO: пофикси ARP проверку сервера перед выдачей адреса
+### a. DHCP REQUEST c опцией `55` от клиента одной подсети в другую подсеть
 
-### b. Отсутствие свободных адресов
+Получаем IP-адрес от DHCP-сервера одной подсети, а затем переносим клиента в другую подсеть.
+
+![DHCP REQUEST for subnet information](image-15.png)
+![DHCP NAK for DHCP REQUEST from another subnet](image-16.png)
+
+### b. DHCP REQUEST с опцией `50` с запросом занятого IP-адреса
+
+Формируем DHCP REQUEST, с опцией запрошенного IP-адреса (опция `50`), и в виде запрошенного адреса указываем, например, адрес DHCP-сервера;
+
+![DHCP REQUEST с запрошенным занятым адресом](image-17.png)
+![DHCP NAK в ответ на запрошенный занятый адрес](image-18.png)
 
 ## 6. Смоделировать ситуации для генерации сообщения DHCPDECLINE
+
+> `DHCPDECLINE` - Клиент сообщает серверу о том, что сетевой адрес уже занят. [3]
+
+
 
 ### a. Отдельно отследить работу ARP в ситуации с сообщением DHCPDECLINE
 
@@ -84,6 +171,7 @@ TODO: пофикси ARP проверку сервера перед выдаче
 
 | Option | Name  |
 | :----: | :---: |
+
 
 # Используемые материалы
 
