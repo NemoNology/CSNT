@@ -317,7 +317,27 @@ eth0: leased 192.168.1.13 for 120 seconds
 
 ## 8. Анализ цепочки связанной с получением адреса при условии, что DHCP сервер не откликается
 
+В случае попытки клиента получения адреса при условии, что DHCP сервер не откликается, результат может иметь 3 исхода:
+1) клиент продолжит слать DHCPDISCOVER сообщения, до тех пор, пока не получит DHCPOFFER, либо не будет остоновлен;
+2) клиент перестанет слать DHCPDISCOVER сообщения, после ограниченного числа попыток, оставляя адрес, без изменений;
+3) клиент перестанет слать DHCPDISCOVER сообщения, после ограниченного числа попыток, присвоив адрес из unicast локальной сети: `169.254.0.0/16`.
+
+### Пример `dhcpcd` клиента
+
+В данном случает, клиент присвоил локальный unicast адрес, после того, как не получил ответа от DHCP сервера.
+
+```console
+/ # dhcpcd eth0
+...
+eth0: using IPv4LL address 169.254.130.111
+...
+```
+
 ## 9. Анализ DHCP сообщений при наличии в одном широковещательном домене нескольких DHCP серверов
+
+В случае наличия двух и более DHCP серверов, DHCP клиент образует цикл DORA с первым DHCP сервером, который ответил на DHCPDISCOVER.
+
+![DHCPDISCOVER при наличии нескольких DHCP серверов](image-25.png)
 
 ## 10. Провести анализ заголовка BOOTP всех сообщений при всех ситуациях DHCP сообщений
 
@@ -348,4 +368,3 @@ eth0: leased 192.168.1.13 for 120 seconds
 - [RFC 2132](https://www.ietf.org/rfc/rfc2132.txt);
 - [protokols.ru -RFC 2131](https://www.protokols.ru/WP/wp-content/uploads/1997/03/rfc2131.pdf);
 - [protokols.ru -RFC 2132](https://www.protokols.ru/WP/wp-content/uploads/1997/03/rfc2132.pdf);
-- [O'Reilly. DHCP for Windows 2000](https://docs.yandex.ru/docs/view?tm=1730686489&tld=ru&lang=en&name=OReilly.Dhcp.For%20Windows%202000.pdf&text=dhcp%20full%20book%20.pdf&url=https%3A%2F%2Ftheswissbay.ch%2Fpdf%2FGentoomen%2520Library%2FProgramming%2FMisc%2FOReilly.Dhcp.For%2520Windows%25202000.pdf&lr=68&mime=pdf&l10n=ru&sign=83c5fca5eb5067ee17b6884035e46196&keyno=0&nosw=1&serpParams=tm%3D1730686489%26tld%3Dru%26lang%3Den%26name%3DOReilly.Dhcp.For%2520Windows%25202000.pdf%26text%3Ddhcp%2Bfull%2Bbook%2B.pdf%26url%3Dhttps%253A%2F%2Ftheswissbay.ch%2Fpdf%2FGentoomen%252520Library%2FProgramming%2FMisc%2FOReilly.Dhcp.For%252520Windows%2525202000.pdf%26lr%3D68%26mime%3Dpdf%26l10n%3Dru%26sign%3D83c5fca5eb5067ee17b6884035e46196%26keyno%3D0%26nosw%3D1);
