@@ -1,5 +1,7 @@
+use serde::{Deserialize, Serialize};
 use std::net::Ipv4Addr;
 
+#[derive(Clone, Serialize, Deserialize)]
 pub enum DnsRecordResponse {
     /// Resolved address of domain name
     Address(Ipv4Addr),
@@ -9,6 +11,7 @@ pub enum DnsRecordResponse {
     NotFound,
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum DnsData {
     /// Request to resolve domain name
     Query(String),
@@ -16,6 +19,7 @@ pub enum DnsData {
     Response(DnsRecordResponse),
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct DnsPacket {
     /// Transaction ID
     pub id: u16,
