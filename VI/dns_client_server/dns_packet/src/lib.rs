@@ -32,6 +32,15 @@ pub enum DnsData {
     Response(DnsQueryResponse),
 }
 
+impl DnsData {
+    pub fn is_query(&self) -> bool {
+        match self {
+            Self::Query(_) => true,
+            _ => false,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 pub struct DnsPacket {
     /// Transaction ID
