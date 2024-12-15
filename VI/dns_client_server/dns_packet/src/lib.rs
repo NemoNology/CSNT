@@ -1,12 +1,25 @@
 use serde::{Deserialize, Serialize};
 use std::net::Ipv4Addr;
 
-#[derive(Clone, Serialize, Deserialize)]
-pub enum DnsRecordResponse {
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum DnsRecordType {
     /// Resolved address of domain name
     Address(Ipv4Addr),
     /// Domain name of name server, which contains address of resolving domain name
     NameServer(String),
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct DnsRecord {
+    /// Resolving domain name
+    pub domain_name: String,
+    /// Resolved record for domain name
+    pub data: DnsRecordType,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum DnsQueryResponse {
+    DnsRecord(DnsRecordType),
     /// Address or name server of resolving domain name not found
     NotFound,
 }
@@ -16,7 +29,7 @@ pub enum DnsData {
     /// Request to resolve domain name
     Query(String),
     /// Answer to resolving domain name request
-    Response(DnsRecordResponse),
+    Response(DnsQueryResponse),
 }
 
 #[derive(Serialize, Deserialize)]
