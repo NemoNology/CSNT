@@ -61,8 +61,7 @@ impl<'a> DnsRecordsTableController<'a> {
             .write(true)
             .append(true)
             .open(&self.records_table_path)?;
-        let s = format!("{:?}", record);
-        writeln!(file, "{}", s)?;
+        writeln!(file, "{} {}", record.domain_name, record.address)?;
         Ok(())
     }
 }
