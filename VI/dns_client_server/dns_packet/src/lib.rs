@@ -1,11 +1,9 @@
-mod dns_record;
+pub mod dns_record;
 use std::{
     error::{self},
     fmt,
     net::Ipv4Addr,
 };
-
-use dns_record::DnsRecordParseError;
 
 #[derive(Debug)]
 pub struct DnsPacket {
