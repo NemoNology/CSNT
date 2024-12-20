@@ -1,16 +1,11 @@
+mod dns_record;
 use std::{
     error::{self},
     fmt,
     net::Ipv4Addr,
 };
 
-#[derive(Debug, PartialEq)]
-pub struct DnsRecord {
-    /// Resolving domain name
-    pub domain_name: String,
-    /// Resolved address
-    pub address: Ipv4Addr,
-}
+use dns_record::DnsRecordParseError;
 
 #[derive(Debug)]
 pub struct DnsPacket {
@@ -27,53 +22,49 @@ pub struct DnsPacket {
 }
 
 #[derive(Debug, Clone)]
-pub enum DnsPacketParseError {
-    InvalidMinimumPacketLength {
-        received_length: usize,
+pub enum DnsPacketLengthError {
+    MinimumPacketLength {
+        found_length: usize,
     },
-    InvalidDomainNameLength {
+    DomainNameLength {
         expected_length: usize,
-        received_length: usize,
+        found_length: usize,
     },
-    InvalidAddressLength {
-        expected_length: usize,
-        received_length: usize,
+    AddressLength {
+        found_length: usize,
     },
 }
 
-impl fmt::Display for DnsPacketParseError {
+impl fmt::Display for DnsPacketLengthError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // : {error_name: &str, expected_size: usize, received_size: usize }
         let info = match &self {
-            DnsPacketParseError::InvalidMinimumPacketLength {
-                received_length: received_size,
-            } => (
-                "Minimum packet length",
-                &DnsPacket::MIN_PACKET_SIZE,
-                received_size,
+            DnsPacketLengthError::MinimumPacketLength { found_length } => (
+                "minimum packet",
+                &DnsPacket::MIN_PACKET_LENGTH,
+                found_length,
             ),
-            DnsPacketParseError::InvalidDomainNameLength {
-                expected_length: expected_size,
-                received_length: received_size,
-            } => ("Domain name length", expected_size, received_size),
-            DnsPacketParseError::InvalidAddressLength {
-                expected_length: expected_size,
-                received_length: received_size,
-            } => ("Resolved address length", expected_size, received_size),
+            DnsPacketLengthError::DomainNameLength {
+                expected_length,
+                found_length,
+            } => ("domain name", expected_length, found_length),
+            DnsPacketLengthError::AddressLength { found_length } => {
+                ("resolved address", &(4 as usize), found_length)
+            }
         };
 
         write!(
             f,
-            "{} error: expected '{}' packet length, but received '{}'",
+            "Unexpected {} length: expected '{}', found '{}'",
             info.0, info.1, info.2
         )
     }
 }
 
-impl error::Error for DnsPacketParseError {}
+impl error::Error for DnsPacketLengthError {}
 
 impl DnsPacket {
-    const MIN_PACKET_SIZE: usize = 4;
+    const MIN_PACKET_LENGTH: usize = 4;
 
     pub fn new(
         id: u16,
@@ -93,60 +84,60 @@ impl DnsPacket {
 }
 
 impl TryFrom<&[u8]> for DnsPacket {
-    type Error = DnsPacketParseError;
+    type Error = DnsPacketLengthError;
 
     fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
         // id (2) + length (1) + flag of resolving (1)
-        let len = bytes.len();
-        if len < Self::MIN_PACKET_SIZE {
-            return Err(DnsPacketParseError::InvalidMinimumPacketLength {
-                received_length: len,
+        let packet_length = bytes.len();
+        if packet_length < Self::MIN_PACKET_LENGTH {
+            return Err(DnsPacketLengthError::MinimumPacketLength {
+                found_length: packet_length,
             });
         }
 
         let id = u16::from_be_bytes([bytes[0], bytes[1]]);
-        let length = bytes[2];
+        let domain_name_length = bytes[2];
         // check if provided length is valid
-        let expected_size = Self::MIN_PACKET_SIZE + length as usize;
-        if len < expected_size {
-            return Err(DnsPacketParseError::InvalidDomainNameLength {
-                expected_length: expected_size,
-                received_length: len,
+        let found_name_length = packet_length - Self::MIN_PACKET_LENGTH;
+        if found_name_length < domain_name_length as usize {
+            return Err(DnsPacketLengthError::DomainNameLength {
+                expected_length: domain_name_length as usize,
+                found_length: found_name_length,
             });
         }
         // 3 = id (2) + length (1)
-        let name_end_index: usize = (3 + length).into();
-        let mut name = String::new();
+        let domain_name_end_index: usize = (3 + domain_name_length).into();
+        let mut domain_name = String::new();
         // if name domain provided, then read it
-        if length > 0 {
-            name = String::from_utf8_lossy(&bytes[3..name_end_index]).to_string();
+        if domain_name_length > 0 {
+            domain_name = String::from_utf8_lossy(&bytes[3..domain_name_end_index]).to_string();
         }
 
         // returning parsed packet if address not resolved
         // not resolved is bytes[3 + name length] == 0
-        if bytes[name_end_index] == 0 {
-            return Ok(Self::new(id, length, name, false, None));
+        if bytes[domain_name_end_index] == 0 {
+            return Ok(Self::new(id, domain_name_length, domain_name, false, None));
         }
 
+        let found_address_length = packet_length - (domain_name_end_index + 1);
         // return error, if is resolved flag is true, but address not provided
         // 5 is flag (1) + IPv4 (4)
-        if len < name_end_index + 5 {
-            return Err(DnsPacketParseError::InvalidAddressLength {
-                expected_length: expected_size,
-                received_length: len,
+        if found_address_length < 4 {
+            return Err(DnsPacketLengthError::AddressLength {
+                found_length: found_address_length,
             });
         }
 
         Ok(Self::new(
             id,
-            length,
-            name,
+            domain_name_length,
+            domain_name,
             true,
             Some(Ipv4Addr::new(
-                bytes[name_end_index + 1],
-                bytes[name_end_index + 2],
-                bytes[name_end_index + 3],
-                bytes[name_end_index + 4],
+                bytes[domain_name_end_index + 1],
+                bytes[domain_name_end_index + 2],
+                bytes[domain_name_end_index + 3],
+                bytes[domain_name_end_index + 4],
             )),
         ))
     }
