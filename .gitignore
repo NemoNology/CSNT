@@ -366,3 +366,5 @@ FodyWeavers.xsd
 VI/Lab-s/Client-Server chat/Godot-mono-project/CSNT. Client server chat.csproj.old
 VI/dns_client_server/*/target/*
 *.lock
+*/CACHEDIR.TAG
+*/.rustc_info.json
