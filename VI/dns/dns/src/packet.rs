@@ -1,6 +1,7 @@
 use std::net::Ipv4Addr;
 
 use errors::DnsPacketLengthError;
+use rand::Rng;
 
 #[derive(Debug)]
 pub struct DnsPacket {
@@ -18,7 +19,9 @@ pub struct DnsPacket {
 
 impl DnsPacket {
     const MIN_PACKET_LENGTH: usize = 4;
+    pub const MAX_PACKET_LENGTH: usize = 264;
 
+    /// Create new packet
     pub fn new(
         id: u16,
         domain_name_length: u8,
@@ -34,12 +37,26 @@ impl DnsPacket {
             resolved_address,
         }
     }
-}
 
-impl TryFrom<&[u8]> for DnsPacket {
-    type Error = DnsPacketLengthError;
+    /// Init new packet with random ID and not resolved address
+    pub fn init(domain_name_length: u8, domain_name: String) -> Self {
+        let mut rng = rand::thread_rng();
 
-    fn try_from(bytes: &[u8]) -> Result<Self, Self::Error> {
+        DnsPacket {
+            id: rng.gen(),
+            domain_name_length,
+            domain_name,
+            is_domain_name_resolved: false,
+            resolved_address: None,
+        }
+    }
+
+    pub fn resolve_name(&mut self, address: Ipv4Addr) {
+        self.is_domain_name_resolved = true;
+        self.resolved_address = Some(address);
+    }
+
+    pub fn try_from(bytes: &[u8]) -> Result<Self, DnsPacketLengthError> {
         // id (2) + length (1) + flag of resolving (1)
         let packet_length = bytes.len();
         if packet_length < Self::MIN_PACKET_LENGTH {
@@ -93,6 +110,25 @@ impl TryFrom<&[u8]> for DnsPacket {
                 bytes[domain_name_end_index + 4],
             )),
         ))
+    }
+
+    pub fn into_bytes(&self) -> Vec<u8> {
+        let mut bytes: Vec<u8> = vec![];
+        let id_bytes = self.id.to_be_bytes();
+        bytes.push(id_bytes[0]);
+        bytes.push(id_bytes[1]);
+        bytes.push(self.domain_name_length);
+        for char_byte in self.domain_name.clone().into_bytes() {
+            bytes.push(char_byte);
+        }
+        bytes.push(self.is_domain_name_resolved.into());
+        if let Some(address) = self.resolved_address {
+            for address_byte in address.to_bits().to_be_bytes() {
+                bytes.push(address_byte);
+            }
+        };
+        // bytes.push()
+        bytes
     }
 }
 
