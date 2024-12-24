@@ -1,5 +1,6 @@
 use errors::BadCharError;
 
+#[derive(Debug, PartialEq)]
 pub struct DomainName(String);
 
 impl DomainName {
