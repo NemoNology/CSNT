@@ -2,65 +2,58 @@ use std::{net::Ipv4Addr, str::FromStr};
 
 use errors::DnsRecordParseError;
 
+use crate::name::DomainName;
+
 #[derive(Debug, PartialEq)]
 pub struct DnsRecord {
     /// Resolving domain name
-    pub domain_name: String,
+    pub domain_name: DomainName,
     /// Resolved address
     pub address: Ipv4Addr,
-}
-
-impl DnsRecord {
-    const INVALID_DOMAIN_NAME_SYMBOLS: [char; 18] = [
-        ',', '~', ':', '!', '@', '#', '$', '%', '^', '&', '\'', '(', ')', '[', ']', '{', '}', ' ',
-    ];
 }
 
 impl TryFrom<&str> for DnsRecord {
     type Error = DnsRecordParseError;
 
     fn try_from(str: &str) -> Result<Self, Self::Error> {
+        // Ignore case
         let str = str.to_lowercase();
+        // Split DNS record to domain name and address
+        // Handle error while it
         let mut parts = str.split_ascii_whitespace();
-        let domain_name = parts.next();
-        let address_str = parts.next();
-        if domain_name.is_none() || address_str.is_none() {
-            return Err(DnsRecordParseError::NotEnoughArguments);
-        }
+        let (domain_name, address_str) = match (parts.next(), parts.next()) {
+            (Some(name), Some(address_str)) => (name, address_str),
+            _ => return Err(DnsRecordParseError::NotEnoughArguments),
+        };
 
-        let domain_name = domain_name.unwrap().to_string();
-        for bad_char in Self::INVALID_DOMAIN_NAME_SYMBOLS {
-            if domain_name.contains(bad_char) {
-                return Err(DnsRecordParseError::InvalidDomainName(
-                    bad_char,
-                    domain_name,
-                ));
+        // Build domain name
+        let domain_name = match DomainName::build(domain_name.to_string()) {
+            Err(e) => {
+                return Err(DnsRecordParseError::InvalidDomainName(e));
             }
+            Ok(name) => name,
+        };
+
+        // Unwrap address and try to parse it in IPv4
+        match Ipv4Addr::from_str(address_str) {
+            Err(e) => Err(DnsRecordParseError::InvalidAddress(e)),
+            Ok(address) => Ok(DnsRecord {
+                domain_name,
+                address,
+            }),
         }
-
-        let address_str = address_str.unwrap();
-        let address = Ipv4Addr::from_str(address_str);
-
-        if let Err(e) = address {
-            return Err(DnsRecordParseError::InvalidAddress(e));
-        }
-
-        let address = address.unwrap();
-
-        Ok(DnsRecord {
-            domain_name,
-            address,
-        })
     }
 }
 
 pub mod errors {
     use std::{self, error, fmt};
 
+    use crate::name::errors::BadCharError;
+
     #[derive(Debug, Clone)]
     pub enum DnsRecordParseError {
         NotEnoughArguments,
-        InvalidDomainName(char, String),
+        InvalidDomainName(BadCharError),
         InvalidAddress(std::net::AddrParseError),
     }
 
@@ -73,8 +66,8 @@ pub mod errors {
                         "Not enough arguments: DNS record require domain name and address"
                     )
                 }
-                DnsRecordParseError::InvalidDomainName(bad_char, name) => {
-                    write!(f, "Unexpected char '{}' in domain name {}", bad_char, name)
+                DnsRecordParseError::InvalidDomainName(bad_char_error) => {
+                    write!(f, "{}", bad_char_error)
                 }
                 DnsRecordParseError::InvalidAddress(address) => {
                     write!(f, "Unexpected IPv4 address: {}", address)
