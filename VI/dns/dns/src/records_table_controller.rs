@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, Write};
+use std::str::FromStr;
 
 use errors::DnsRecordsTableParseError;
 
@@ -21,7 +22,7 @@ impl DnsRecordsTableController {
         for (line_number, line) in BufReader::new(file).lines().enumerate() {
             let line = line?;
             // Handle errors/Parse record and push it
-            records.push(match DnsRecord::build(line.as_str()) {
+            records.push(match DnsRecord::from_str(&line) {
                 Ok(record) => record,
                 Err(inner_error) => {
                     return Err(Box::new(DnsRecordsTableParseError {
