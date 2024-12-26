@@ -12,15 +12,24 @@ pub struct DnsRecord {
     pub address: Ipv4Addr,
 }
 
-impl TryFrom<&str> for DnsRecord {
-    type Error = DnsRecordParseError;
+impl DnsRecord {
+    pub fn new(domain_name: DomainName, address: Ipv4Addr) -> Self {
+        DnsRecord {
+            domain_name,
+            address,
+        }
+    }
+}
 
-    fn try_from(str: &str) -> Result<Self, Self::Error> {
+impl FromStr for DnsRecord {
+    type Err = DnsRecordParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Ignore case
-        let str = str.to_lowercase();
+        let s = s.to_lowercase();
         // Split DNS record to domain name and address
-        // Handle error while it
-        let mut parts = str.split_ascii_whitespace();
+        // Handle error
+        let mut parts = s.split_ascii_whitespace();
         let (domain_name, address_str) = match (parts.next(), parts.next()) {
             (Some(name), Some(address_str)) => (name, address_str),
             _ => return Err(DnsRecordParseError::NotEnoughArguments),
