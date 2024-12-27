@@ -7,10 +7,10 @@ use errors::DnsRecordsTableParseError;
 
 use crate::record::DnsRecord;
 
-pub struct DnsRecordsTableController(String);
+pub struct DnsRecordsTableController<'a>(&'a str);
 
-impl DnsRecordsTableController {
-    pub fn new(records_table_path: String) -> Self {
+impl<'a> DnsRecordsTableController<'a> {
+    pub fn new(records_table_path: &'a str) -> Self {
         DnsRecordsTableController(records_table_path)
     }
 
