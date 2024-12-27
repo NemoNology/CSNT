@@ -1,3 +1,5 @@
+use std::fmt;
+
 use errors::BadCharError;
 
 #[derive(Debug, PartialEq)]
@@ -15,6 +17,12 @@ impl DomainName {
             }
         }
         Ok(DomainName(name))
+    }
+}
+
+impl fmt::Display for DomainName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 
