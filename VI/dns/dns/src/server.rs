@@ -12,9 +12,7 @@ pub struct DnsServer {
 }
 
 impl DnsServer {
-    pub const UDP_LISTENING_PORT: u16 = 60_053;
-
-    pub fn new<'a>(records_table_path: &'a str) -> Result<Self, Box<dyn Error>> {
+    pub fn new<'a>(records_table_path: &'a str, listen_port: u16) -> Result<Self, Box<dyn Error>> {
         let controller = DnsRecordsTableController::new(records_table_path);
         let records = controller.get_records_list()?;
         let mut records_table: HashMap<String, Ipv4Addr> = HashMap::with_capacity(records.len());
@@ -23,11 +21,7 @@ impl DnsServer {
             records_table.insert(record.domain_name.to_string(), record.address);
         }
 
-        let udp_socket = UdpSocket::bind(SocketAddrV4::new(
-            Ipv4Addr::LOCALHOST,
-            Self::UDP_LISTENING_PORT,
-        ))?;
-        udp_socket.connect("127.0.0.1:0")?;
+        let udp_socket = UdpSocket::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, listen_port))?;
 
         Ok(DnsServer {
             udp_socket,
