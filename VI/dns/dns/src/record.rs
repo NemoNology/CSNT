@@ -1,3 +1,4 @@
+use core::fmt;
 use std::{net::Ipv4Addr, str::FromStr};
 
 use errors::DnsRecordParseError;
@@ -51,6 +52,12 @@ impl FromStr for DnsRecord {
                 address,
             }),
         }
+    }
+}
+
+impl fmt::Display for DnsRecord {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.domain_name, self.address)
     }
 }
 
