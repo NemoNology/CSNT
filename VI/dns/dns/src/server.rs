@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     error::Error,
-    net::{Ipv4Addr, SocketAddrV4, UdpSocket},
+    net::{Ipv4Addr, SocketAddr, SocketAddrV4, UdpSocket},
 };
 
 use crate::{packet::DnsPacket, records_table_controller::DnsRecordsTableController};
@@ -35,22 +35,34 @@ impl DnsServer {
         })
     }
 
-    pub fn resolve<'a>(&self, domain_name: &'a str) -> Option<Ipv4Addr> {
-        self.records_table.get(domain_name).copied()
-    }
-
-    pub fn wait_packet_to_resolve_and_resolve_it(&self) -> Result<(), Box<dyn Error>> {
+    /// Return DNS query packet and client address
+    pub fn wait_dns_query(&self) -> Result<(DnsPacket, SocketAddr), Box<dyn Error>> {
         let mut bytes_buffer = [0; DnsPacket::MAX_PACKET_LENGTH];
         let (packet_length, client_address) = self.udp_socket.recv_from(&mut bytes_buffer)?;
 
-        let mut packet = DnsPacket::try_from(&bytes_buffer[..packet_length])?;
-        if let Some(address) = self.resolve(&packet.domain_name) {
-            packet.resolve_name(address);
-        }
+        Ok((
+            DnsPacket::try_from(&bytes_buffer[..packet_length])?,
+            client_address,
+        ))
+    }
+
+    pub fn resolve(
+        &self,
+        dns_query_packet: &mut DnsPacket,
+        dns_client_address: &SocketAddr,
+    ) -> Result<Option<Ipv4Addr>, Box<dyn Error>> {
+        let resolved_address = self
+            .records_table
+            .get(&dns_query_packet.domain_name)
+            .copied();
+
+        if let Some(address) = resolved_address {
+            dns_query_packet.resolve_name(address);
+        };
 
         self.udp_socket
-            .send_to(&packet.into_bytes(), client_address)?;
+            .send_to(&dns_query_packet.into_bytes(), dns_client_address)?;
 
-        Ok(())
+        Ok(resolved_address)
     }
 }
